@@ -1387,8 +1387,143 @@ function populateMonthFilters(){
   });
 }
 
-function syncSNS(){toast('S&S Canada API integration coming in Phase 2!','');}
-function syncSanmar(){toast('SanMar Canada API integration coming in Phase 2!','');}
+/* ===== S&S CANADA SYNC ===== */
+// Credentials stored in localStorage only — never in GitHub code
+const SNS_ACCT = '436247';
+
+async function syncSNS(){
+  const keyEl = document.getElementById('sns-key');
+  const apiKey = keyEl.value.trim() || localStorage.getItem('sns_api_key') || '';
+  if(!apiKey){
+    toast('Please paste your S&S Canada API key first','err');
+    keyEl.focus();
+    return;
+  }
+  // Save key locally for convenience
+  localStorage.setItem('sns_api_key', apiKey);
+
+  const btn = document.querySelector('#page-suppliers .api-panel button');
+  const origText = 'Sync now';
+  toast('Connecting to S&S Canada…','');
+
+  // S&S Canada API - fetch products via our Apps Script proxy
+  // (direct fetch blocked by CORS, so we route through Apps Script)
+  try {
+    const result = await apiCall({
+      action: 'fetchSNS',
+      acct: SNS_ACCT,
+      key: apiKey,
+      endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json'
+    });
+
+    if(result.error){
+      toast('S&S Canada error: ' + result.error, 'err');
+      return;
+    }
+
+    const products = result.data || [];
+    if(!products.length){
+      toast('No products returned — check your API key','err');
+      return;
+    }
+
+    // Show import preview
+    showSNSPreview(products, apiKey);
+
+  } catch(e) {
+    // Fallback: open S&S Canada directly if API proxy not yet updated
+    toast('Opening S&S Canada catalog — update Apps Script for auto-sync','');
+    window.open('https://api-ca.ssactivewear.com', '_blank');
+  }
+}
+
+function showSNSPreview(products, apiKey){
+  // Build a preview of the first 50 products
+  const preview = products.slice(0, 200);
+  const modal = document.getElementById('sns-preview-modal');
+  const tbody = document.getElementById('sns-tbody');
+  document.getElementById('sns-count').textContent = products.length;
+
+  tbody.innerHTML = preview.map(p => `
+    <tr>
+      <td><input type="checkbox" class="sns-chk" value="${p.sku||p.styleID||''}" checked></td>
+      <td class="mono">${p.sku||p.styleID||'—'}</td>
+      <td style="font-weight:500">${p.title||p.styleName||'—'}</td>
+      <td>${p.colorName||'—'}</td>
+      <td>${p.sizeName||'—'}</td>
+      <td>${p.casePrice?'$'+Number(p.casePrice).toFixed(2):p.piecePrice?'$'+Number(p.piecePrice).toFixed(2):'—'}</td>
+      <td>${p.qty??'—'}</td>
+    </tr>
+  `).join('');
+
+  modal.classList.add('open');
+
+  document.getElementById('sns-import-btn').onclick = async () => {
+    const checked = [...document.querySelectorAll('.sns-chk:checked')].map(c => c.value);
+    const toImport = products.filter(p => checked.includes(String(p.sku||p.styleID||'')));
+    await importSNSProducts(toImport);
+    modal.classList.remove('open');
+  };
+}
+
+async function importSNSProducts(products){
+  toast('Importing ' + products.length + ' products…','');
+  let imported = 0;
+  for(const p of products){
+    const sku = 'RAW-' + String(invSkuN).padStart(4,'0');
+    invSkuN++;
+    const row = {
+      'SKU': sku,
+      'Product Name': p.title||p.styleName||'S&S Product',
+      'Type': 'Raw Material',
+      'Stage': 'Raw',
+      'Color': p.colorName||'',
+      'Size': p.sizeName||'',
+      'Qty': p.qty||0,
+      'Reorder Threshold': '5',
+      'Weight': p.weight||'',
+      'Listed Date': today(),
+      'Material Cost': p.piecePrice||p.casePrice||0,
+      'Labour Cost': 0,
+      'Decoration Cost': 0,
+      'Digitizing Cost': 0,
+      'Packaging Cost': 0,
+      'Other Cost': 0,
+      'Total Cost': p.piecePrice||p.casePrice||0,
+      'Markup %': 100,
+      'Sale Price': (Number(p.piecePrice||p.casePrice||0)*2).toFixed(2),
+      'Etsy Fee': 0.20,
+      'Platform Fee %': 6.5,
+      'Est Profit': 0,
+      'Supplier': 'S&S Canada (SNS Activewear)',
+      'Platforms': '',
+      'Tags': p.brandName||'',
+      'Design File': '',
+      'Notes': 'Style: '+(p.styleID||'')
+    };
+    try{
+      await apiCall({action:'saveRow',sheet:'Inventory',keyCol:'SKU',row});
+      inventory.push(row);
+      imported++;
+    }catch(e){}
+  }
+  renderAll();
+  toast('Imported '+imported+' products from S&S Canada!','ok');
+}
+
+function syncSanmar(){
+  toast('SanMar Canada integration — contact SanMar to enable API access for your account','');
+  window.open('https://www.sanmar.com/content/electronic-data-interchange', '_blank');
+}
+
+// Load saved API key if exists
+window.addEventListener('load', () => {
+  const savedKey = localStorage.getItem('sns_api_key');
+  if(savedKey){
+    const el = document.getElementById('sns-key');
+    if(el) el.value = savedKey;
+  }
+});
 
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
@@ -1397,7 +1532,40 @@ document.querySelectorAll('.overlay').forEach(o=>{
 loadAll();
 </script>
 
-<!-- UPDATED APPS SCRIPT NOTE -->
-<!-- You need to update your Google Apps Script — see instructions below -->
+<!-- S&S Canada Preview Modal -->
+<div class="overlay" id="sns-preview-modal">
+<div class="modal" style="width:min(800px,96vw)">
+  <div class="modal-hd">
+    <h2>S&S Canada — Import preview</h2>
+    <button class="ghost" onclick="document.getElementById('sns-preview-modal').classList.remove('open')">✕</button>
+  </div>
+  <div class="modal-bd" style="max-height:55vh">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Found <strong id="sns-count">0</strong> products. Check the ones you want to import as raw materials into your inventory.</p>
+    <div style="margin-bottom:10px;display:flex;gap:8px">
+      <button class="sm" onclick="document.querySelectorAll('.sns-chk').forEach(c=>c.checked=true)">Select all</button>
+      <button class="sm" onclick="document.querySelectorAll('.sns-chk').forEach(c=>c.checked=false)">Deselect all</button>
+    </div>
+    <div class="tbl-wrap">
+      <table style="min-width:500px">
+        <thead><tr>
+          <th style="width:30px"></th>
+          <th style="width:80px">Style #</th>
+          <th>Product name</th>
+          <th style="width:80px">Color</th>
+          <th style="width:60px">Size</th>
+          <th style="width:70px">Price</th>
+          <th style="width:60px">In stock</th>
+        </tr></thead>
+        <tbody id="sns-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button onclick="document.getElementById('sns-preview-modal').classList.remove('open')">Cancel</button>
+    <button class="primary" id="sns-import-btn">Import selected</button>
+  </div>
+</div>
+</div>
+
 </body>
 </html>

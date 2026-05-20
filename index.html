@@ -1599,7 +1599,7 @@ async function syncSNS(){
       action: 'fetchSNS',
       acct: SNS_ACCT,
       key: apiKey,
-      endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json&pageSize=2000'
+      endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json&pageSize=100&page=1'
     });
     if(prodsResult.error){ toast('S&S variants error: ' + prodsResult.error,'err'); return; }
 

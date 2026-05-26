@@ -1535,130 +1535,99 @@ function populateMonthFilters(){
 }
 
 /* ===== S&S CANADA SYNC ===== */
-// Credentials stored in localStorage only — never in GitHub code
 const SNS_ACCT = '436247';
 
-// S&S Canada category keywords for filtering
-const SNS_CAT_KEYWORDS = {
-  tshirts:  ['t-shirt','tee','short sleeve','long sleeve'],
-  fleece:   ['fleece','hoodie','sweatshirt','crewneck','pullover','zip'],
-  hats:     ['hat','cap','beanie','headwear','toque'],
-  bags:     ['bag','tote','backpack','accessory','accessories','apron'],
-  polos:    ['polo'],
-  jackets:  ['jacket','vest','softshell','windbreaker','parka','outerwear'],
-};
-
-const SNS_CAT_LABELS = {
-  tshirts: 'T-Shirts', fleece: 'Fleece / Hoodies',
-  hats: 'Hats & Headwear', bags: 'Bags & Accessories',
-  polos: 'Polos', jackets: 'Jackets'
-};
+// Category IDs from S&S Canada API
+const SNS_CATEGORIES = [
+  { id: 1258, label: 'T-Shirts (Cotton)',      skuPrefix: 'TEE' },
+  { id: 1259, label: 'T-Shirts (Poly Perf)',   skuPrefix: 'TEE' },
+  { id: 1260, label: 'T-Shirts (Blends)',      skuPrefix: 'TEE' },
+  { id: 1261, label: 'T-Shirts (Trending)',    skuPrefix: 'TEE' },
+  { id: 899,  label: 'Fleece & Outerwear',     skuPrefix: 'FLC' },
+  { id: 384,  label: 'Bottoms',                skuPrefix: 'BTM' },
+  { id: 900,  label: 'Hats & Bags',            skuPrefix: 'HAT' },
+  { id: 53,   label: 'Accessories',            skuPrefix: 'ACC' },
+];
 
 let snsAllVariants = [];
-let snsActiveCats = new Set(['tshirts','fleece','hats','bags']);
+let snsActiveCats = new Set(SNS_CATEGORIES.map(c => c.id));
 
-async function syncSNS(){
+async function syncSNS() {
   const keyEl = document.getElementById('sns-key');
   const apiKey = keyEl.value.trim() || localStorage.getItem('sns_api_key') || '';
-  if(!apiKey){
-    toast('Please paste your S&S Canada API key first','err');
+  if (!apiKey) {
+    toast('Please paste your S&S Canada API key first', 'err');
     keyEl.focus();
     return;
   }
   localStorage.setItem('sns_api_key', apiKey);
-  toast('Fetching S&S Canada styles…','');
 
-  try {
-    // Step 1: fetch styles for category/name info
-    const stylesResult = await apiCall({
-      action: 'fetchSNS',
-      acct: SNS_ACCT,
-      key: apiKey,
-      endpoint: 'https://api-ca.ssactivewear.com/V2/styles/?dataFormat=json&pageSize=500'
-    });
-    if(stylesResult.error){ toast('S&S error: ' + stylesResult.error,'err'); return; }
+  snsAllVariants = [];
+  let totalFetched = 0;
 
-    const styles = stylesResult.data || [];
-    if(!styles.length){ toast('No styles returned — check your API key','err'); return; }
-
-    // Build style lookup map
-    const styleMap = {};
-    styles.forEach(s => {
-      styleMap[s.styleID] = {
-        name: s.title || s.styleName || '',
-        brand: s.brandName || '',
-        category: (s.categoryName || s.category || '').toLowerCase(),
-        subcategory: (s.subcategoryName || s.subcategory || '').toLowerCase(),
-      };
-    });
-
-    toast('Fetching S&S Canada variants and prices…','');
-
-    // Step 2: fetch products/variants with real colors, sizes, prices
-    const prodsResult = await apiCall({
-      action: 'fetchSNS',
-      acct: SNS_ACCT,
-      key: apiKey,
-      endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json&pageSize=100&page=1'
-    });
-    if(prodsResult.error){ toast('S&S variants error: ' + prodsResult.error,'err'); return; }
-
-    const variants = prodsResult.data || [];
-    if(!variants.length){ toast('No variants returned','err'); return; }
-
-    // Attach style info and detect category for each variant
-    snsAllVariants = variants.map(v => {
-      const style = styleMap[v.styleID] || {};
-      const catText = (style.category + ' ' + style.subcategory + ' ' + (style.name||'')).toLowerCase();
-      let catKey = null;
-      for(const [key, keywords] of Object.entries(SNS_CAT_KEYWORDS)){
-        if(keywords.some(kw => catText.includes(kw))){ catKey = key; break; }
+  for (const cat of SNS_CATEGORIES) {
+    toast('Fetching ' + cat.label + '…', '');
+    try {
+      const result = await apiCall({
+        action: 'fetchSNS',
+        acct: SNS_ACCT,
+        key: apiKey,
+        endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json&categoryID=' + cat.id + '&pageSize=500'
+      });
+      if (result.error) {
+        toast('Error on ' + cat.label + ': ' + result.error, 'err');
+        continue;
       }
-      return {
-        ...v,
-        _styleName: style.name || v.styleName || v.title || 'S&S Product',
-        _brand: style.brand || '',
-        _catKey: catKey,
-      };
-    });
-
-    toast('Loaded ' + snsAllVariants.length + ' variants — choose categories below','ok');
-    showSNSPreview();
-
-  } catch(e) {
-    toast('S&S sync error: ' + e.message,'err');
+      const variants = result.data || [];
+      variants.forEach(v => {
+        snsAllVariants.push({
+          ...v,
+          _catId: cat.id,
+          _catLabel: cat.label,
+          _skuPrefix: cat.skuPrefix,
+          _styleName: v.styleName || v.title || 'S&S Product',
+          _brand: v.brandName || '',
+        });
+      });
+      totalFetched += variants.length;
+    } catch (e) {
+      toast('Error fetching ' + cat.label + ': ' + e.message, 'err');
+    }
   }
+
+  toast('Loaded ' + totalFetched + ' variants — choose categories below', 'ok');
+  showSNSPreview();
 }
 
-function showSNSPreview(){
+function showSNSPreview() {
   const modal = document.getElementById('sns-preview-modal');
-  const filtered = snsAllVariants.filter(v => v._catKey && snsActiveCats.has(v._catKey));
+  const filtered = snsAllVariants.filter(v => snsActiveCats.has(v._catId));
 
   // Render category filter chips
-  document.getElementById('sns-cat-filters').innerHTML = Object.entries(SNS_CAT_LABELS).map(([id, label]) => `
-    <button class="sm ${snsActiveCats.has(id)?'primary':''}"
-      onclick="toggleSnsCat('${id}',this)" style="border-radius:20px">
-      ${label}
+  document.getElementById('sns-cat-filters').innerHTML = SNS_CATEGORIES.map(cat => `
+    <button class="sm ${snsActiveCats.has(cat.id) ? 'primary' : ''}"
+      onclick="toggleSnsCat(${cat.id}, this)" style="border-radius:20px">
+      ${cat.label}
     </button>
   `).join('');
 
   document.getElementById('sns-count').textContent = filtered.length + ' variants';
 
   const preview = filtered.slice(0, 500);
-  document.getElementById('sns-tbody').innerHTML = preview.map((v,i) => {
+  document.getElementById('sns-tbody').innerHTML = preview.map(v => {
     const price = Number(v.piecePrice || v.casePrice || 0);
     return `<tr>
       <td><input type="checkbox" class="sns-chk" data-idx="${snsAllVariants.indexOf(v)}" checked></td>
-      <td class="mono" style="font-size:11px">${v.styleID||'—'}</td>
+      <td class="mono" style="font-size:11px">${v.styleID || '—'}</td>
       <td style="font-weight:500;font-size:12px">${v._styleName}</td>
-      <td style="font-size:12px">${v.colorName||v.color||'—'}</td>
-      <td style="font-size:12px">${v.sizeName||v.size||'—'}</td>
-      <td style="font-weight:600;color:var(--green)">${price?'$'+price.toFixed(2):'—'}</td>
-      <td>${(v.qty>0)?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-size:12px">${v.colorName || v.color || '—'}</td>
+      <td style="font-size:12px">${v.sizeName || v.size || '—'}</td>
+      <td style="font-weight:600;color:var(--green)">${price ? '$' + price.toFixed(2) : '—'}</td>
+      <td>${(v.qty > 0) ? '<span style="color:var(--green)">✓</span>' : '<span style="color:var(--text3)">—</span>'}</td>
     </tr>`;
   }).join('');
 
-  if(filtered.length > 500){
+  if (filtered.length > 500) {
     document.getElementById('sns-tbody').innerHTML += `
       <tr><td colspan="7" style="text-align:center;padding:12px;color:var(--text3);font-size:12px">
         Showing 500 of ${filtered.length} — all checked variants will be imported
@@ -1670,15 +1639,15 @@ function showSNSPreview(){
   document.getElementById('sns-import-btn').onclick = async () => {
     const checkedIdxs = [...document.querySelectorAll('.sns-chk:checked')].map(c => +c.dataset.idx);
     const toImport = checkedIdxs.map(i => snsAllVariants[i]).filter(Boolean);
-    if(!toImport.length){ toast('Nothing selected','err'); return; }
+    if (!toImport.length) { toast('Nothing selected', 'err'); return; }
     modal.classList.remove('open');
     await importSNSProducts(toImport);
   };
 }
 
-function toggleSnsCat(id, btn){
-  if(snsActiveCats.has(id)){
-    if(snsActiveCats.size <= 1){ toast('Keep at least one category selected','err'); return; }
+function toggleSnsCat(id, btn) {
+  if (snsActiveCats.has(id)) {
+    if (snsActiveCats.size <= 1) { toast('Keep at least one category selected', 'err'); return; }
     snsActiveCats.delete(id);
     btn.classList.remove('primary');
   } else {
@@ -1688,18 +1657,16 @@ function toggleSnsCat(id, btn){
   showSNSPreview();
 }
 
-async function importSNSProducts(variants){
-  toast('Importing ' + variants.length + ' variants…','');
+async function importSNSProducts(variants) {
+  toast('Importing ' + variants.length + ' variants…', '');
   let imported = 0;
-  for(const v of variants){
+  for (const v of variants) {
     const price = Number(v.piecePrice || v.casePrice || 0);
-    const catKey = v._catKey;
-    const skuPrefix = catKey==='hats'?'HAT':catKey==='bags'?'BAG':catKey==='fleece'?'FLC':'TEE';
-    const sku = skuPrefix + '-' + String(invSkuN).padStart(4,'0');
+    const sku = v._skuPrefix + '-' + String(invSkuN).padStart(4, '0');
     invSkuN++;
     const row = {
       'SKU': sku,
-      'Product Name': v._styleName + (v.colorName?' — '+v.colorName:''),
+      'Product Name': v._styleName + (v.colorName ? ' — ' + v.colorName : ''),
       'Type': 'Raw Material',
       'Stage': 'Raw',
       'Color': v.colorName || v.color || '',
@@ -1724,29 +1691,29 @@ async function importSNSProducts(variants){
       'Platforms': '',
       'Tags': v._brand || '',
       'Design File': '',
-      'Notes': 'S&S Style: ' + (v.styleID||'') + ' | SKU: ' + (v.sku||'')
+      'Notes': 'S&S Style: ' + (v.styleID || '') + ' | Cat: ' + v._catLabel
     };
-    try{
-      await apiCall({action:'saveRow',sheet:'Inventory',keyCol:'SKU',row});
+    try {
+      await apiCall({ action: 'saveRow', sheet: 'Inventory', keyCol: 'SKU', row });
       inventory.push(row);
       imported++;
-    }catch(e){}
+    } catch (e) {}
   }
   renderAll();
-  toast('Imported ' + imported + ' S&S variants!','ok');
+  toast('Imported ' + imported + ' S&S variants!', 'ok');
 }
 
-function syncSanmar(){
-  toast('SanMar Canada integration — coming soon!','');
+function syncSanmar() {
+  toast('SanMar Canada integration — coming soon!', '');
 }
-// Load saved API key if exists
+
 window.addEventListener('load', () => {
   const savedKey = localStorage.getItem('sns_api_key');
-  if(savedKey){
+  if (savedKey) {
     const el = document.getElementById('sns-key');
-    if(el) el.value = savedKey;
+    if (el) el.value = savedKey;
   }
-});
+});  
 
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});

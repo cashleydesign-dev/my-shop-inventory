@@ -223,6 +223,7 @@ tr:hover td{background:#faf8f5}
   .nav-btn{padding:6px 10px;font-size:12px}
 }
 </style>
+<script src="https://unpkg.com/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -1527,40 +1528,41 @@ function triggerReceiptScan() {
   document.getElementById('receipt-file-input').click();
 }
 
-function handleReceiptFile(input) {
+async function handleReceiptFile(input) {
   const file = input.files[0];
   if (!file) return;
-  toast('Reading receipt…', '');
-
-  // Compress image before sending (max 1400px wide, 80% quality)
-  const img = new Image();
-  const url = URL.createObjectURL(file);
-  img.onload = async () => {
-    URL.revokeObjectURL(url);
-    const canvas = document.createElement('canvas');
-    let w = img.width, h = img.height;
-    const MAX = 1400;
-    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    const dataURL = canvas.toDataURL('image/jpeg', 0.82);
-    const base64 = dataURL.split(',')[1];
-
-    try {
-      const result = await apiCall({ action: 'scanReceipt', imageData: base64, mimeType: 'image/jpeg' });
-      if (!result.ok || !result.text) {
-        toast('Scan failed: ' + (result.error || result.text || 'no text returned'), 'err');
-        return;
-      }
-      const parsed = parseReceiptText(result.text);
-      prefillExpenseFromReceipt(parsed);
-      toast('Receipt read! Review the fields and save.', 'ok');
-    } catch(e) {
-      toast('Receipt scan error: ' + e.message, 'err');
+  toast('Reading receipt — please wait…', '');
+  try {
+    const dataURL = await compressImageToDataURL(file, 1400, 0.85);
+    const { data: { text } } = await Tesseract.recognize(dataURL, 'eng');
+    if (!text || text.trim().length < 5) {
+      toast('Could not read receipt — try a clearer photo', 'err');
+      return;
     }
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not load image', 'err'); };
-  img.src = url;
+    const parsed = parseReceiptText(text);
+    prefillExpenseFromReceipt(parsed);
+    toast('Receipt read! Review the fields and save.', 'ok');
+  } catch(e) {
+    toast('Receipt scan error: ' + e.message, 'err');
+  }
+}
+
+function compressImageToDataURL(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
 }
 
 function parseReceiptText(text) {
@@ -2413,147 +2415,4 @@ function calcLineItem(id){
   document.getElementById(id+'-price').textContent=fmt(pricePerPc);
   document.getElementById(id+'-linetotal').textContent=fmt(lineTotal);
 
-  const taxType=document.getElementById(id+'-tax').value;
-  const gst=taxType==='GST+PST'||taxType==='GST only'?lineTotal*0.05:0;
-  const pst=taxType==='GST+PST'?lineTotal*0.07:0;
-
-  return {lineTotal, gst, pst, pricePerPc, qty};
-}
-
-function calcQuote(){
-  let subtotal=0, totalGST=0, totalPST=0;
-  const lineIds=[...document.getElementById('q-lines').children].map(d=>d.id);
-  lineIds.forEach(id=>{
-    try{
-      const {lineTotal,gst,pst}=calcLineItem(id);
-      subtotal+=lineTotal;
-      totalGST+=gst;
-      totalPST+=pst;
-    }catch(e){}
-  });
-  const shipping=+document.getElementById('q-shipping').value||0;
-  const deposit=+document.getElementById('q-deposit').value||0;
-  const total=subtotal+totalGST+totalPST+shipping;
-  const balance=total-deposit;
-  document.getElementById('q-subtotal').textContent=fmt(subtotal+shipping);
-  document.getElementById('q-gst').textContent=fmt(totalGST);
-  document.getElementById('q-pst').textContent=fmt(totalPST);
-  document.getElementById('q-total').textContent=fmt(total);
-  document.getElementById('q-balance').textContent=fmt(balance);
-}
-
-function openQuoteModal(id=null){
-  editQuoteId=id;
-  quoteLineCount=0;
-  document.getElementById('q-lines').innerHTML='';
-  document.getElementById('quote-modal-title').textContent=id?'Edit quote':'New quote';
-  const t=today();
-  const expiry=new Date();expiry.setDate(expiry.getDate()+30);
-  const expiryStr=expiry.toISOString().split('T')[0];
-  if(!id){
-    document.getElementById('q-num').value=makeQuoteNum();
-    document.getElementById('q-customer').value='';
-    document.getElementById('q-date').value=t;
-    document.getElementById('q-expiry').value=expiryStr;
-    document.getElementById('q-status').value='Draft';
-    document.getElementById('q-deposit').value='';
-    document.getElementById('q-shipping').value='';
-    document.getElementById('q-notes').value='';
-    addQuoteLine();
-  }else{
-    const qt=quotes.find(x=>x['ID']===id);
-    document.getElementById('q-num').value=qt['Quote #']||'';
-    document.getElementById('q-customer').value=qt['Customer']||'';
-    document.getElementById('q-date').value=qt['Date']||t;
-    document.getElementById('q-expiry').value=qt['Expiry']||expiryStr;
-    document.getElementById('q-status').value=qt['Status']||'Draft';
-    document.getElementById('q-deposit').value=qt['Deposit']||'';
-    document.getElementById('q-shipping').value=qt['Shipping']||'';
-    document.getElementById('q-notes').value=qt['Notes']||'';
-    // Reload line items
-    try{
-      const lines=JSON.parse(qt['Line Items']||'[]');
-      lines.forEach(l=>addQuoteLine(l));
-    }catch(e){addQuoteLine();}
-  }
-  calcQuote();
-  document.getElementById('quote-modal').classList.add('open');
-}
-
-function editQuote(id){openQuoteModal(id)}
-
-async function delQuote(id){
-  if(!confirm('Delete this quote?'))return;
-  try{
-    await apiCall({action:'deleteRow',sheet:'Quotes',key:'ID',value:id});
-    quotes=quotes.filter(q=>q['ID']!==id);
-    renderQuotes();
-    toast('Quote deleted','ok');
-  }catch(e){toast('Error deleting','err')}
-}
-
-async function saveQuote(){
-  const customer=document.getElementById('q-customer').value.trim();
-  if(!customer){alert('Please enter a customer name');return}
-  const btn=document.getElementById('quote-save-btn');
-  btn.textContent='Saving…';btn.disabled=true;
-
-  // Collect line items
-  const lineIds=[...document.getElementById('q-lines').children].map(d=>d.id);
-  const lineItems=lineIds.map(lid=>({
-    desc:document.getElementById(lid+'-desc').value,
-    garment:document.getElementById(lid+'-garment').value,
-    qty:document.getElementById(lid+'-qty').value,
-    garmcost:document.getElementById(lid+'-garmcost').value,
-    garmmark:document.getElementById(lid+'-garmmark').value,
-    garmsship:document.getElementById(lid+'-garmsship').value,
-    svc:document.getElementById(lid+'-svc').value,
-    stitches:document.getElementById(lid+'-stitches').value,
-    colours:document.getElementById(lid+'-colours').value,
-    sleeves:document.getElementById(lid+'-sleeves').value,
-    darks:document.getElementById(lid+'-darks').value,
-    decsship:document.getElementById(lid+'-decsship').value,
-    tax:document.getElementById(lid+'-tax').value
-  }));
-
-  let subtotal=0,totalGST=0,totalPST=0;
-  lineIds.forEach(id=>{
-    try{const {lineTotal,gst,pst}=calcLineItem(id);subtotal+=lineTotal;totalGST+=gst;totalPST+=pst;}catch(e){}
-  });
-  const shipping=+document.getElementById('q-shipping').value||0;
-  const deposit=+document.getElementById('q-deposit').value||0;
-  const total=subtotal+totalGST+totalPST+shipping;
-
-  const id=editQuoteId||'QT-'+Date.now();
-  const row={
-    'ID':id,
-    'Quote #':document.getElementById('q-num').value,
-    'Customer':customer,
-    'Date':document.getElementById('q-date').value,
-    'Expiry':document.getElementById('q-expiry').value,
-    'Status':document.getElementById('q-status').value,
-    'Subtotal':subtotal,
-    'GST':totalGST,
-    'PST':totalPST,
-    'Shipping':shipping,
-    'Total':total,
-    'Deposit':deposit,
-    'Balance':total-deposit,
-    'Notes':document.getElementById('q-notes').value.trim(),
-    'Line Items':JSON.stringify(lineItems)
-  };
-
-  try{
-    await apiCall({action:'saveRow',sheet:'Quotes',keyCol:'ID',row});
-    if(editQuoteId){const idx=quotes.findIndex(q=>q['ID']===editQuoteId);if(idx>=0)quotes[idx]=row;}
-    else quotes.push(row);
-    closeModal('quote-modal');
-    renderQuotes();
-    toast(editQuoteId?'Quote updated!':'Quote saved!','ok');
-  }catch(e){toast('Error saving','err')}
-  finally{btn.textContent='Save quote';btn.disabled=false}
-}
-</script>
-
-</body>
-</html>
+  const tax

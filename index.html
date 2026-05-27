@@ -1673,7 +1673,7 @@ async function syncSelectedStyles() {
           'Stage': 'Raw',
           'Color': v.colorName || v.color || '',
           'Size': v.sizeName || v.size || '',
-          'Qty': 0,
+          'Qty': Number(v.warehouseQty || v.qty || v.inventoryQty || 0),
           'Reorder Threshold': '3',
           'Weight': v.weight || '',
           'Listed Date': today(),

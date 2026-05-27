@@ -1549,7 +1549,7 @@ function handleReceiptFile(input) {
     try {
       const result = await apiCall({ action: 'scanReceipt', imageData: base64, mimeType: 'image/jpeg' });
       if (!result.ok || !result.text) {
-        toast('Could not read receipt — try a clearer photo', 'err');
+        toast('Scan failed: ' + (result.error || result.text || 'no text returned'), 'err');
         return;
       }
       const parsed = parseReceiptText(result.text);

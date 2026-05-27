@@ -298,6 +298,9 @@ tr:hover td{background:#faf8f5}
       <option value="Finished">Finished goods</option>
       <option value="Digital">Digital</option>
     </select>
+    <select id="inv-brand" onchange="renderInv()" style="width:auto">
+      <option value="">All brands</option>
+    </select>
     <select id="inv-sup" onchange="renderInv()" style="width:auto">
       <option value="">All suppliers</option>
     </select>
@@ -309,6 +312,7 @@ tr:hover td{background:#faf8f5}
         <thead><tr>
           <th style="width:85px">SKU</th>
           <th style="width:150px">Product name</th>
+          <th style="width:90px">Brand</th>
           <th style="width:90px">Type</th>
           <th style="width:75px">Stage</th>
           <th style="width:75px">Color</th>
@@ -321,7 +325,7 @@ tr:hover td{background:#faf8f5}
           <th style="width:110px">Platforms</th>
           <th style="width:80px">Actions</th>
         </tr></thead>
-        <tbody id="inv-tbody"><tr><td colspan="13"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
+        <tbody id="inv-tbody"><tr><td colspan="14"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -407,6 +411,8 @@ tr:hover td{background:#faf8f5}
   <div class="sec-hd">
     <h2>Expenses</h2>
     <button class="primary" onclick="openExpModal()">+ Add expense</button>
+    <button onclick="triggerReceiptScan()" style="display:flex;align-items:center;gap:6px">📷 Scan receipt</button>
+    <input type="file" id="receipt-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this)">
   </div>
 
   <div class="stats" id="exp-stats"></div>
@@ -894,13 +900,21 @@ function renderInv(){
   const q=document.getElementById('inv-search').value.toLowerCase();
   const type=document.getElementById('inv-type').value;
   const stage=document.getElementById('inv-stage').value;
+  const brand=document.getElementById('inv-brand').value;
   const sup=document.getElementById('inv-sup').value;
 
+  // Populate brand dropdown dynamically
+  const brandSel=document.getElementById('inv-brand');
+  const currentBrand=brandSel.value;
+  const allBrands=[...new Set(inventory.map(i=>(i['Tags']||'').trim()).filter(Boolean))].sort();
+  brandSel.innerHTML='<option value="">All brands</option>'+allBrands.map(b=>`<option value="${b}" ${b===currentBrand?'selected':''}>${b}</option>`).join('');
+
   const filtered=inventory.filter(i=>{
-    const str=((i['Product Name']||'')+(i['SKU']||'')+(i['Tags']||'')+(i['Color']||'')).toLowerCase();
+    const str=((i['Product Name']||'')+(i['SKU']||'')+(i['Tags']||'')+(i['Color']||'')+(i['Notes']||'')).toLowerCase();
     if(q&&!str.includes(q))return false;
     if(type&&i['Type']!==type)return false;
     if(stage&&i['Stage']!==stage)return false;
+    if(brand&&(i['Tags']||'').trim()!==brand)return false;
     if(sup&&i['Supplier']!==sup)return false;
     return true;
   });
@@ -919,7 +933,7 @@ function renderInv(){
 
   const tb=document.getElementById('inv-tbody');
   if(!filtered.length){
-    tb.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">${inventory.length?'No matches':'No products yet'}</div><div>${inventory.length?'Try adjusting your filters':'Click "+ Add product" to get started'}</div></div></td></tr>`;
+    tb.innerHTML=`<tr><td colspan="14"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">${inventory.length?'No matches':'No products yet'}</div><div>${inventory.length?'Try adjusting your filters':'Click "+ Add product" to get started'}</div></div></td></tr>`;
     return;
   }
 
@@ -934,6 +948,7 @@ function renderInv(){
     return `<tr>
       <td class="mono">${i['SKU']||''}</td>
       <td style="font-weight:500">${i['Product Name']||''}</td>
+      <td style="font-size:11px;color:var(--text2)">${i['Tags']||'—'}</td>
       <td><span class="badge ${TYPE_BADGE[i['Type']]||''}">${i['Type']||'—'}</span></td>
       <td><span class="badge ${STAGE_BADGE[i['Stage']]||''}">${i['Stage']||'—'}</span></td>
       <td>${i['Color']||'—'}</td>
@@ -1504,6 +1519,117 @@ async function saveExp(){
     toast(editExpId?'Expense updated!':'Expense saved!','ok');
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save expense';btn.disabled=false}
+}
+
+/* ===== RECEIPT SCANNING ===== */
+function triggerReceiptScan() {
+  document.getElementById('receipt-file-input').value = '';
+  document.getElementById('receipt-file-input').click();
+}
+
+function handleReceiptFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  toast('Reading receipt…', '');
+
+  // Compress image before sending (max 1400px wide, 80% quality)
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = async () => {
+    URL.revokeObjectURL(url);
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    const MAX = 1400;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const dataURL = canvas.toDataURL('image/jpeg', 0.82);
+    const base64 = dataURL.split(',')[1];
+
+    try {
+      const result = await apiCall({ action: 'scanReceipt', imageData: base64, mimeType: 'image/jpeg' });
+      if (!result.ok || !result.text) {
+        toast('Could not read receipt — try a clearer photo', 'err');
+        return;
+      }
+      const parsed = parseReceiptText(result.text);
+      prefillExpenseFromReceipt(parsed);
+      toast('Receipt read! Review the fields and save.', 'ok');
+    } catch(e) {
+      toast('Receipt scan error: ' + e.message, 'err');
+    }
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not load image', 'err'); };
+  img.src = url;
+}
+
+function parseReceiptText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const r = { vendor: '', date: '', description: '', subtotal: '', gst: '', pst: '', total: '', receiptNum: '' };
+
+  // Vendor = first meaningful line (skip very short lines)
+  r.vendor = lines.find(l => l.length > 3) || '';
+
+  // Date — try several common formats
+  const datePats = [
+    /\b(\d{4}-\d{2}-\d{2})\b/,
+    /\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/,
+    /\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s*\d{4})\b/i,
+  ];
+  for (const p of datePats) { const m = text.match(p); if (m) { r.date = m[1]; break; } }
+
+  // Receipt / invoice number
+  const numM = text.match(/(?:receipt|invoice|order|trans(?:action)?|ref(?:erence)?)[#\s.:No-]*([A-Z0-9\-]{4,})/i);
+  if (numM) r.receiptNum = numM[1];
+
+  // Amounts — scan every line for labelled dollar amounts
+  lines.forEach(line => {
+    const amt = (label) => {
+      const m = line.match(new RegExp(label + '[:\\s]*\\$?\\s*([\\d,]+\\.\\d{2})', 'i'));
+      return m ? parseFloat(m[1].replace(/,/g, '')) : null;
+    };
+    if (/subtotal|sub-total|sub total/i.test(line)) { const v = amt(''); if (v !== null) r.subtotal = v.toFixed(2); }
+    if (/\bGST\b/i.test(line)) { const v = amt('GST'); if (v !== null) r.gst = v.toFixed(2); }
+    if (/\bPST\b/i.test(line)) { const v = amt('PST'); if (v !== null) r.pst = v.toFixed(2); }
+    if (/\bHST\b/i.test(line)) { const v = amt('HST'); if (v !== null) r.gst = v.toFixed(2); } // treat HST as GST field
+    if (/(?:grand\s+)?total(?:\s+due|\s+paid)?[:\s]/i.test(line) && !/subtotal/i.test(line)) {
+      const m = line.match(/\$?\s*([\d,]+\.\d{2})\s*$/);
+      if (m) r.total = parseFloat(m[1].replace(/,/g,'')).toFixed(2);
+    }
+  });
+
+  // Back-calculate subtotal if missing but total + taxes known
+  if (!r.subtotal && r.total && (r.gst || r.pst)) {
+    const sub = parseFloat(r.total) - parseFloat(r.gst||0) - parseFloat(r.pst||0);
+    if (sub > 0) r.subtotal = sub.toFixed(2);
+  }
+  // If still no subtotal but we have a total, use total as subtotal
+  if (!r.subtotal && r.total) r.subtotal = r.total;
+
+  // Build a description from vendor + first product-like line
+  r.description = r.vendor;
+
+  return r;
+}
+
+function prefillExpenseFromReceipt(p) {
+  // Open the expense modal fresh
+  openExpModal();
+
+  // Fill in what we found
+  if (p.vendor)     { document.getElementById('ex-desc').value = p.vendor; }
+  if (p.date) {
+    // Try to convert to YYYY-MM-DD for the date input
+    const d = new Date(p.date);
+    if (!isNaN(d)) document.getElementById('ex-date').value = d.toISOString().split('T')[0];
+  }
+  if (p.subtotal)   document.getElementById('ex-amt').value   = p.subtotal;
+  if (p.gst)        document.getElementById('ex-gst').value   = p.gst;
+  if (p.pst)        document.getElementById('ex-pst').value   = p.pst;
+  if (p.receiptNum) document.getElementById('ex-receipt').value = p.receiptNum;
+
+  // Recalculate the totals display
+  calcExp();
 }
 
 /* ===== HELPERS ===== */

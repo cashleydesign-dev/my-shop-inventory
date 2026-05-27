@@ -275,7 +275,6 @@ tr:hover td{background:#faf8f5}
   <div class="sec-hd">
     <h2>Inventory</h2>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="openInvModal()">+ Add product</button>
       <button class="primary" onclick="openInvModal()">+ Add product</button>
     </div>
   </div>
@@ -1534,173 +1533,178 @@ function populateMonthFilters(){
   });
 }
 
-/* ===== S&S CANADA SYNC ===== */
+/* ===== S&S CANADA SYNC (Style-First) ===== */
 const SNS_ACCT = '436247';
+const SNS_BASE = 'https://api-ca.ssactivewear.com/V2';
 
-// Category IDs from S&S Canada API
-const SNS_CATEGORIES = [
-  { id: 1258, label: 'T-Shirts (Cotton)',      skuPrefix: 'TEE' },
-  { id: 1259, label: 'T-Shirts (Poly Perf)',   skuPrefix: 'TEE' },
-  { id: 1260, label: 'T-Shirts (Blends)',      skuPrefix: 'TEE' },
-  { id: 1261, label: 'T-Shirts (Trending)',    skuPrefix: 'TEE' },
-  { id: 899,  label: 'Fleece & Outerwear',     skuPrefix: 'FLC' },
-  { id: 384,  label: 'Bottoms',                skuPrefix: 'BTM' },
-  { id: 900,  label: 'Hats & Bags',            skuPrefix: 'HAT' },
-  { id: 53,   label: 'Accessories',            skuPrefix: 'ACC' },
-];
+const SNS_CAT_NAMES = {
+  1258:'T-Shirts', 1259:'T-Shirts', 1260:'T-Shirts', 1261:'T-Shirts',
+  899:'Fleece & Outerwear', 384:'Bottoms', 900:'Hats & Bags', 53:'Accessories'
+};
+const SNS_CAT_SKU = {
+  1258:'TEE', 1259:'TEE', 1260:'TEE', 1261:'TEE',
+  899:'FLC', 384:'BTM', 900:'HAT', 53:'ACC'
+};
 
-let snsAllVariants = [];
-let snsActiveCats = new Set(SNS_CATEGORIES.map(c => c.id));
+let snsStyles = [];
+let snsSelected = new Set();
 
 async function syncSNS() {
   const keyEl = document.getElementById('sns-key');
   const apiKey = keyEl.value.trim() || localStorage.getItem('sns_api_key') || '';
-  if (!apiKey) {
-    toast('Please paste your S&S Canada API key first', 'err');
-    keyEl.focus();
-    return;
-  }
+  if (!apiKey) { toast('Please paste your S&S Canada API key first', 'err'); keyEl.focus(); return; }
   localStorage.setItem('sns_api_key', apiKey);
-
-  snsAllVariants = [];
-  let totalFetched = 0;
-
-  for (const cat of SNS_CATEGORIES) {
-    toast('Fetching ' + cat.label + '…', '');
+  toast('Fetching S&S catalog…', '');
+  try {
+    const result = await apiCall({
+      action: 'fetchSNS', acct: SNS_ACCT, key: apiKey,
+      endpoint: SNS_BASE + '/styles/?format=json'
+    });
+    if (result.error) { toast('S&S error: ' + result.error, 'err'); return; }
+    snsStyles = result.data || [];
+    if (!snsStyles.length) { toast('No styles returned — check your API key', 'err'); return; }
     try {
-      const result = await apiCall({
-        action: 'fetchSNS',
-        acct: SNS_ACCT,
-        key: apiKey,
-        endpoint: 'https://api-ca.ssactivewear.com/V2/products/?dataFormat=json&categoryID=' + cat.id + '&pageSize=500'
-      });
-      if (result.error) {
-        toast('Error on ' + cat.label + ': ' + result.error, 'err');
-        continue;
-      }
-      const variants = result.data || [];
-      variants.forEach(v => {
-        snsAllVariants.push({
-          ...v,
-          _catId: cat.id,
-          _catLabel: cat.label,
-          _skuPrefix: cat.skuPrefix,
-          _styleName: v.styleName || v.title || 'S&S Product',
-          _brand: v.brandName || '',
-        });
-      });
-      totalFetched += variants.length;
-    } catch (e) {
-      toast('Error fetching ' + cat.label + ': ' + e.message, 'err');
-    }
-  }
-
-  toast('Loaded ' + totalFetched + ' variants — choose categories below', 'ok');
-  showSNSPreview();
+      const saved = JSON.parse(localStorage.getItem('sns_selected') || '[]');
+      snsSelected = new Set(saved.map(String));
+    } catch(e) { snsSelected = new Set(); }
+    toast('Loaded ' + snsStyles.length + ' styles', 'ok');
+    openStylePickerModal();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
 }
 
-function showSNSPreview() {
-  const modal = document.getElementById('sns-preview-modal');
-  const filtered = snsAllVariants.filter(v => snsActiveCats.has(v._catId));
+function openStylePickerModal() {
+  renderStylePicker('', '');
+  document.getElementById('sns-preview-modal').classList.add('open');
+}
 
-  // Render category filter chips
-  document.getElementById('sns-cat-filters').innerHTML = SNS_CATEGORIES.map(cat => `
-    <button class="sm ${snsActiveCats.has(cat.id) ? 'primary' : ''}"
-      onclick="toggleSnsCat(${cat.id}, this)" style="border-radius:20px">
-      ${cat.label}
-    </button>
-  `).join('');
+function renderStylePicker(search, activeCat) {
+  const q = search.toLowerCase();
+  const cats = {};
+  snsStyles.forEach(s => {
+    const catId = s.categoryID || s.CategoryID || 0;
+    const catName = s.categoryName || s.CategoryName || SNS_CAT_NAMES[catId] || 'Other';
+    if (!cats[catName]) cats[catName] = [];
+    cats[catName].push({...s, _catId: catId, _catName: catName});
+  });
+  const catNames = Object.keys(cats).sort();
+  if (!activeCat || !cats[activeCat]) activeCat = catNames[0] || '';
 
-  document.getElementById('sns-count').textContent = filtered.length + ' variants';
-
-  const preview = filtered.slice(0, 500);
-  document.getElementById('sns-tbody').innerHTML = preview.map(v => {
-    const price = Number(v.piecePrice || v.casePrice || 0);
-    return `<tr>
-      <td><input type="checkbox" class="sns-chk" data-idx="${snsAllVariants.indexOf(v)}" checked></td>
-      <td class="mono" style="font-size:11px">${v.styleID || '—'}</td>
-      <td style="font-weight:500;font-size:12px">${v._styleName}</td>
-      <td style="font-size:12px">${v.colorName || v.color || '—'}</td>
-      <td style="font-size:12px">${v.sizeName || v.size || '—'}</td>
-      <td style="font-weight:600;color:var(--green)">${price ? '$' + price.toFixed(2) : '—'}</td>
-      <td>${(v.qty > 0) ? '<span style="color:var(--green)">✓</span>' : '<span style="color:var(--text3)">—</span>'}</td>
-    </tr>`;
+  document.getElementById('sns-cat-tabs').innerHTML = catNames.map(cat => {
+    const cnt = (cats[cat] || []).filter(s =>
+      !q || (s.title || s.styleName || '').toLowerCase().includes(q) || String(s.styleID || '').includes(q)
+    ).length;
+    return `<button class="sm ${cat === activeCat ? 'primary' : ''}"
+      onclick="renderStylePicker(document.getElementById('sns-search').value,'${cat.replace(/'/g,"\'")}')"
+      style="border-radius:20px;margin:2px">${cat} <span style="opacity:.7">${cnt}</span></button>`;
   }).join('');
 
-  if (filtered.length > 500) {
-    document.getElementById('sns-tbody').innerHTML += `
-      <tr><td colspan="7" style="text-align:center;padding:12px;color:var(--text3);font-size:12px">
-        Showing 500 of ${filtered.length} — all checked variants will be imported
-      </td></tr>`;
+  const catStyles = (cats[activeCat] || []).filter(s =>
+    !q || (s.title || s.styleName || '').toLowerCase().includes(q) || String(s.styleID || '').includes(q)
+  );
+  document.getElementById('sns-count').textContent = snsSelected.size + ' styles selected';
+
+  if (!catStyles.length) {
+    document.getElementById('sns-tbody').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3)">No styles found</td></tr>`;
+    return;
   }
 
-  modal.classList.add('open');
-
-  document.getElementById('sns-import-btn').onclick = async () => {
-    const checkedIdxs = [...document.querySelectorAll('.sns-chk:checked')].map(c => +c.dataset.idx);
-    const toImport = checkedIdxs.map(i => snsAllVariants[i]).filter(Boolean);
-    if (!toImport.length) { toast('Nothing selected', 'err'); return; }
-    modal.classList.remove('open');
-    await importSNSProducts(toImport);
-  };
+  document.getElementById('sns-tbody').innerHTML = catStyles.map(s => {
+    const id = String(s.styleID || s.StyleID || '');
+    const name = s.title || s.styleName || s.Title || 'S&S Style';
+    const brand = s.brandName || s.BrandName || '';
+    const price = s.piecePrice || s.basePrice || 0;
+    const isSel = snsSelected.has(id);
+    return `<tr onclick="toggleStyleCheck('${id}',this)" style="cursor:pointer${isSel ? ';background:var(--accent2-bg)' : ''}" data-sid="${id}">
+      <td style="width:30px;padding-left:12px"><input type="checkbox" class="sty-chk" data-id="${id}" ${isSel ? 'checked' : ''}
+        onclick="event.stopPropagation();toggleStyleCheck('${id}',this.closest('tr'))"></td>
+      <td class="mono" style="font-size:11px">${id}</td>
+      <td style="font-weight:500;font-size:12px">${name}</td>
+      <td style="font-size:11px;color:var(--text3)">${brand}</td>
+      <td style="font-size:12px;color:var(--green)">${price ? '$' + Number(price).toFixed(2) : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
-function toggleSnsCat(id, btn) {
-  if (snsActiveCats.has(id)) {
-    if (snsActiveCats.size <= 1) { toast('Keep at least one category selected', 'err'); return; }
-    snsActiveCats.delete(id);
-    btn.classList.remove('primary');
+function toggleStyleCheck(id, row) {
+  const cb = row.querySelector('.sty-chk');
+  if (snsSelected.has(String(id))) {
+    snsSelected.delete(String(id));
+    if (cb) cb.checked = false;
+    row.style.background = '';
   } else {
-    snsActiveCats.add(id);
-    btn.classList.add('primary');
+    snsSelected.add(String(id));
+    if (cb) cb.checked = true;
+    row.style.background = 'var(--accent2-bg)';
   }
-  showSNSPreview();
+  document.getElementById('sns-count').textContent = snsSelected.size + ' styles selected';
+  localStorage.setItem('sns_selected', JSON.stringify([...snsSelected]));
 }
 
-async function importSNSProducts(variants) {
-  toast('Importing ' + variants.length + ' variants…', '');
-  let imported = 0;
-  for (const v of variants) {
-    const price = Number(v.piecePrice || v.casePrice || 0);
-    const sku = v._skuPrefix + '-' + String(invSkuN).padStart(4, '0');
-    invSkuN++;
-    const row = {
-      'SKU': sku,
-      'Product Name': v._styleName + (v.colorName ? ' — ' + v.colorName : ''),
-      'Type': 'Raw Material',
-      'Stage': 'Raw',
-      'Color': v.colorName || v.color || '',
-      'Size': v.sizeName || v.size || '',
-      'Qty': 0,
-      'Reorder Threshold': '3',
-      'Weight': v.weight || '',
-      'Listed Date': today(),
-      'Material Cost': price.toFixed(2),
-      'Labour Cost': 0,
-      'Decoration Cost': 0,
-      'Digitizing Cost': 0,
-      'Packaging Cost': 0,
-      'Other Cost': 0,
-      'Total Cost': price.toFixed(2),
-      'Markup %': 100,
-      'Sale Price': (price * 2).toFixed(2),
-      'Etsy Fee': 0.20,
-      'Platform Fee %': 6.5,
-      'Est Profit': 0,
-      'Supplier': 'S&S Canada (SNS Activewear)',
-      'Platforms': '',
-      'Tags': v._brand || '',
-      'Design File': '',
-      'Notes': 'S&S Style: ' + (v.styleID || '') + ' | Cat: ' + v._catLabel
-    };
+async function syncSelectedStyles() {
+  if (!snsSelected.size) { toast('No styles selected', 'err'); return; }
+  const apiKey = localStorage.getItem('sns_api_key') || '';
+  if (!apiKey) { toast('API key missing — re-enter on Suppliers tab', 'err'); return; }
+  document.getElementById('sns-preview-modal').classList.remove('open');
+  const styleIds = [...snsSelected];
+  let totalImported = 0;
+  for (let i = 0; i < styleIds.length; i++) {
+    const styleId = styleIds[i];
+    const style = snsStyles.find(s => String(s.styleID || s.StyleID || '') === styleId);
+    const styleName = style ? (style.title || style.styleName || 'S&S Style') : 'S&S Style';
+    const catId = style ? (style.categoryID || style.CategoryID || 0) : 0;
+    const skuPrefix = SNS_CAT_SKU[catId] || 'RAW';
+    const catLabel = SNS_CAT_NAMES[catId] || 'Other';
+    toast(`(${i + 1}/${styleIds.length}) Fetching ${styleName}…`, '');
     try {
-      await apiCall({ action: 'saveRow', sheet: 'Inventory', keyCol: 'SKU', row });
-      inventory.push(row);
-      imported++;
-    } catch (e) {}
+      const result = await apiCall({
+        action: 'fetchSNS', acct: SNS_ACCT, key: apiKey,
+        endpoint: SNS_BASE + '/products/?styleID=' + styleId + '&format=json'
+      });
+      if (result.error || !result.data) continue;
+      for (const v of result.data) {
+        const price = Number(v.piecePrice || v.casePrice || 0);
+        const sku = skuPrefix + '-' + String(invSkuN).padStart(4, '0');
+        invSkuN++;
+        const row = {
+          'SKU': sku,
+          'Product Name': styleName + (v.colorName ? ' — ' + v.colorName : ''),
+          'Type': 'Raw Material',
+          'Stage': 'Raw',
+          'Color': v.colorName || v.color || '',
+          'Size': v.sizeName || v.size || '',
+          'Qty': 0,
+          'Reorder Threshold': '3',
+          'Weight': v.weight || '',
+          'Listed Date': today(),
+          'Material Cost': price.toFixed(2),
+          'Labour Cost': 0,
+          'Decoration Cost': 0,
+          'Digitizing Cost': 0,
+          'Packaging Cost': 0,
+          'Other Cost': 0,
+          'Total Cost': price.toFixed(2),
+          'Markup %': 100,
+          'Sale Price': (price * 2).toFixed(2),
+          'Etsy Fee': 0.20,
+          'Platform Fee %': 6.5,
+          'Est Profit': 0,
+          'Supplier': 'S&S Canada (SNS Activewear)',
+          'Platforms': '',
+          'Tags': style ? (style.brandName || v.brandName || '') : '',
+          'Design File': '',
+          'Notes': 'S&S Style: ' + styleId + ' | ' + catLabel
+        };
+        try {
+          await apiCall({ action: 'saveRow', sheet: 'Inventory', keyCol: 'SKU', row });
+          inventory.push(row);
+          totalImported++;
+        } catch(e) {}
+      }
+    } catch(e) { toast('Error on style ' + styleId, 'err'); }
   }
   renderAll();
-  toast('Imported ' + imported + ' S&S variants!', 'ok');
+  toast('✓ Synced ' + totalImported + ' variants from ' + styleIds.length + ' styles!', 'ok');
 }
 
 function syncSanmar() {
@@ -1722,30 +1726,39 @@ document.querySelectorAll('.overlay').forEach(o=>{
 loadAll();
 </script>
 
-<!-- S&S Canada Preview Modal -->
+<!-- S&S Canada Style Picker Modal -->
 <div class="overlay" id="sns-preview-modal">
 <div class="modal" style="width:min(800px,96vw)">
   <div class="modal-hd">
-    <h2>S&S Canada — Import preview</h2>
+    <h2>S&S Canada — Style Picker</h2>
     <button class="ghost" onclick="document.getElementById('sns-preview-modal').classList.remove('open')">✕</button>
   </div>
-  <div class="modal-bd" style="max-height:55vh">
-    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Found <strong id="sns-count">0</strong> varients. Check the ones you want to import as raw materials into your inventory.</p>
-   <div id="sns-cat-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-    <div style="margin-bottom:10px;display:flex;gap:8px">
-      <button class="sm" onclick="document.querySelectorAll('.sns-chk').forEach(c=>c.checked=true)">Select all</button>
-      <button class="sm" onclick="document.querySelectorAll('.sns-chk').forEach(c=>c.checked=false)">Deselect all</button>
+  <div class="modal-bd" style="max-height:60vh">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Choose which styles to carry — <strong id="sns-count">0 styles selected</strong>. Only selected styles sync to Inventory.</p>
+    <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="search-wrap" style="flex:1;min-width:180px">
+        <span class="search-icon">⌕</span>
+        <input type="text" placeholder="Search styles…" id="sns-search"
+          oninput="renderStylePicker(this.value,'')" style="padding-left:32px">
+      </div>
+      <button class="sm" onclick="[...document.querySelectorAll('.sty-chk')].forEach(c=>{
+        snsSelected.add(String(c.dataset.id));c.checked=true;c.closest('tr').style.background='var(--accent2-bg)'});
+        document.getElementById('sns-count').textContent=snsSelected.size+' styles selected';
+        localStorage.setItem('sns_selected',JSON.stringify([...snsSelected]))">All on page</button>
+      <button class="sm" onclick="[...document.querySelectorAll('.sty-chk')].forEach(c=>{
+        snsSelected.delete(String(c.dataset.id));c.checked=false;c.closest('tr').style.background=''});
+        document.getElementById('sns-count').textContent=snsSelected.size+' styles selected';
+        localStorage.setItem('sns_selected',JSON.stringify([...snsSelected]))">Clear page</button>
     </div>
+    <div id="sns-cat-tabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px"></div>
     <div class="tbl-wrap">
-      <table style="min-width:500px">
+      <table style="min-width:450px">
         <thead><tr>
           <th style="width:30px"></th>
-          <th style="width:80px">Style #</th>
-          <th>Product name</th>
-          <th style="width:80px">Color</th>
-          <th style="width:60px">Size</th>
+          <th style="width:70px">Style #</th>
+          <th>Style name</th>
+          <th style="width:110px">Brand</th>
           <th style="width:70px">Price</th>
-          <th style="width:60px">In stock</th>
         </tr></thead>
         <tbody id="sns-tbody"></tbody>
       </table>
@@ -1753,9 +1766,8 @@ loadAll();
   </div>
   <div class="modal-ft">
     <button onclick="document.getElementById('sns-preview-modal').classList.remove('open')">Cancel</button>
-    <button class="primary" id="sns-import-btn">Import selected</button>
+    <button class="primary" onclick="syncSelectedStyles()">↻ Sync selected to Inventory</button>
   </div>
-
 </div>
 </div>
 

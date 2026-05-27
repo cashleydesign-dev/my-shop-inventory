@@ -818,12 +818,12 @@ async function loadAll(){
       apiCall({action:'getSheet',sheet:'Services'}),
       apiCall({action:'getSheet',sheet:'Quotes'})
     ]);
-    inventory=inv.rows||[];
-    suppliers=sup.rows||[];
-    sales=sal.rows||[];
-    expenses=exp.rows||[];
-    services=svc.rows||[];
-    quotes=qt.rows||[];
+    inventory=inv.rows||inv.data||[];
+    suppliers=sup.rows||sup.data||[];
+    sales=sal.rows||sal.data||[];
+    expenses=exp.rows||exp.data||[];
+    services=svc.rows||svc.data||[];
+    quotes=qt.rows||qt.data||[];
     if(inventory.length){
       const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);
       invSkuN=Math.max(...nums)+1;

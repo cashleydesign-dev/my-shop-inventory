@@ -391,7 +391,8 @@ tr:hover td{background:#faf8f5}
       <table style="min-width:700px">
         <thead><tr>
           <th style="width:90px">Date</th>
-          <th style="width:160px">Product</th>
+          <th style="width:130px">Customer</th>
+          <th style="width:140px">Product</th>
           <th style="width:100px">Platform</th>
           <th style="width:50px">Qty</th>
           <th style="width:75px">Unit price</th>
@@ -664,7 +665,11 @@ tr:hover td{background:#faf8f5}
       <label>Platform <select id="sl-plat">
         <option>Etsy</option><option>My website</option><option>Amazon KDP</option><option>Craft fair / in-person</option>
       </select></label>
-      <label>Product <select id="sl-product"><option value="">— select —</option></select></label>
+      <label>Customer <input type="text" id="sl-customer" list="sl-customer-list" placeholder="e.g. Jane Smith" autocomplete="off"><datalist id="sl-customer-list"></datalist></label>
+      <label>Product
+        <select id="sl-product"><option value="">— select product —</option></select>
+        <span onclick="toggleQuickProd()" style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:block">＋ Add new product</span>
+      </label>
       <label>Quantity sold <input type="number" id="sl-qty" min="1" value="1" oninput="calcSale()"></label>
       <label>Unit sale price ($) <input type="number" id="sl-price" min="0" step="0.01" placeholder="0.00" oninput="calcSale()"></label>
       <label>Platform fees ($) <input type="number" id="sl-fees" min="0" step="0.01" placeholder="0.00" oninput="calcSale()"></label>
@@ -689,6 +694,18 @@ tr:hover td{background:#faf8f5}
       <div><div class="pb-label">Net income</div><div class="pb-val" id="sl-net" style="color:var(--green)">$0.00</div></div>
     </div>
     <div class="fl" style="margin-top:12px"><label>Notes / order # <input type="text" id="sl-notes" placeholder="e.g. Order #1234, custom embroidery for client"></label></label></div>
+    <div id="quick-prod-form" style="display:none;border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:12px;background:var(--bg2)">
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--text2)">Quick-add product to inventory</div>
+      <div class="fg">
+        <label>Product name <input type="text" id="qp-name" placeholder="e.g. Custom tote bag"></label>
+        <label>Type <select id="qp-type"><option>Embroidered</option><option>Digital Embroidery</option><option>Coloring Book</option><option>KDP Book</option><option>Raw Material</option><option>Other</option></select></label>
+        <label>Sale price ($) <input type="number" id="qp-price" min="0" step="0.01" placeholder="0.00"></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button type="button" class="ghost" onclick="toggleQuickProd()">Cancel</button>
+        <button type="button" class="primary" onclick="saveQuickProd()">Add &amp; select</button>
+      </div>
+    </div>
   </div>
   <div class="modal-ft">
     <button onclick="closeModal('sale-modal')">Cancel</button>
@@ -1306,11 +1323,12 @@ function renderSales(){
 
   const tb=document.getElementById('sale-tbody');
   if(!filtered.length){
-    tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">💰</div><div class="empty-title">${sales.length?'No matches':'No sales recorded yet'}</div></div></td></tr>`;
+    tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">💰</div><div class="empty-title">${sales.length?'No matches':'No sales recorded yet'}</div></div></td></tr>`;
     return;
   }
   tb.innerHTML=[...filtered].reverse().map(s=>`<tr>
     <td style="font-size:12px">${s['Date']||'—'}</td>
+    <td style="font-size:12px;color:var(--text2)">${s['Customer']||'—'}</td>
     <td style="font-weight:500">${s['Product']||'—'}</td>
     <td><span class="badge ${PLAT_BADGE[s['Platform']]||''}">${s['Platform']||'—'}</span></td>
     <td>${s['Qty']||1}</td>
@@ -1330,16 +1348,20 @@ function openSaleModal(id=null){
   document.getElementById('sale-modal-title').textContent=id?'Edit sale':'Record sale';
   const prodSel=document.getElementById('sl-product');
   prodSel.innerHTML='<option value="">— select product —</option>'+inventory.map(i=>`<option value="${i['Product Name']||''}">${i['Product Name']||''} (${i['SKU']||''})</option>`).join('');
+  const allCusts=new Set([...sales.map(s=>s['Customer']),...quotes.map(q=>q['Customer'])].filter(Boolean));
+  document.getElementById('sl-customer-list').innerHTML=[...allCusts].map(c=>`<option value="${c.replace(/"/g,'&quot;')}">`).join('');
+  document.getElementById('quick-prod-form').style.display='none';
   if(!id){
     document.getElementById('sl-date').value=today();
     document.getElementById('sl-plat').value='Etsy';
     document.getElementById('sl-qty').value=1;
     document.getElementById('sl-exempt').value='No';
-    ['sl-price','sl-fees','sl-gst','sl-pst','sl-notes','sl-invoice'].forEach(x=>document.getElementById(x).value='');
+    ['sl-customer','sl-price','sl-fees','sl-gst','sl-pst','sl-notes','sl-invoice'].forEach(x=>document.getElementById(x).value='');
   }else{
     const s=sales.find(x=>x['ID']===id);
     document.getElementById('sl-date').value=s['Date']||today();
     document.getElementById('sl-plat').value=s['Platform']||'Etsy';
+    document.getElementById('sl-customer').value=s['Customer']||'';
     document.getElementById('sl-product').value=s['Product']||'';
     document.getElementById('sl-qty').value=s['Qty']||1;
     document.getElementById('sl-price').value=s['Unit Price']||'';
@@ -1355,6 +1377,39 @@ function openSaleModal(id=null){
 }
 
 function editSale(id){openSaleModal(id)}
+
+function toggleQuickProd(){
+  const f=document.getElementById('quick-prod-form');
+  const showing=f.style.display!=='none';
+  f.style.display=showing?'none':'block';
+  if(!showing)document.getElementById('qp-name').focus();
+}
+
+async function saveQuickProd(){
+  const name=document.getElementById('qp-name').value.trim();
+  if(!name){alert('Please enter a product name');return}
+  const price=+document.getElementById('qp-price').value||0;
+  const type=document.getElementById('qp-type').value;
+  const cat=type==='Embroidered'?'EMB':type==='Digital Embroidery'?'DIG':type==='Coloring Book'?'CLR':type==='KDP Book'?'KDP':'GEN';
+  const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);
+  const next=Math.max(0,...nums)+1;
+  const sku=cat+'-'+String(next).padStart(4,'0');
+  const row={'SKU':sku,'Product Name':name,'Type':type,'Stage':'Finished','Color':'','Size':'','Qty':0,
+    'Reorder Threshold':'','Weight':'','Listed Date':today(),'Material Cost':0,'Labour Cost':0,
+    'Decoration Cost':0,'Digitizing Cost':0,'Packaging Cost':0,'Other Cost':0,
+    'Total Cost':0,'Markup %':100,'Sale Price':price,'Etsy Fee':0,'Platform Fee %':0,
+    'Est Profit':price,'Supplier':'','Platforms':'','Tags':'','Design File':'','Notes':''};
+  try{
+    await apiCall({action:'saveRow',sheet:'Inventory',keyCol:'SKU',row});
+    inventory.push(row);
+    const prodSel=document.getElementById('sl-product');
+    prodSel.innerHTML='<option value="">— select product —</option>'+inventory.map(i=>`<option value="${i['Product Name']||''}">${i['Product Name']||''} (${i['SKU']||''})</option>`).join('');
+    prodSel.value=name;
+    document.getElementById('quick-prod-form').style.display='none';
+    document.getElementById('qp-name').value='';document.getElementById('qp-price').value='';
+    toast(`"${name}" added to inventory`,'ok');
+  }catch(e){toast('Error adding product','err')}
+}
 
 async function delSale(id){
   if(!confirm('Delete this sale?'))return;
@@ -1381,6 +1436,7 @@ async function saveSale(){
   const row={
     'ID':id,'Date':document.getElementById('sl-date').value,
     'Platform':document.getElementById('sl-plat').value,
+    'Customer':document.getElementById('sl-customer').value.trim(),
     'Product':product,'Qty':qty,'Unit Price':price,
     'Gross':gross,'Fees':fees,'Net Income':net,
     'GST Collected':gst,'PST Collected':pst,

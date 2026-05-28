@@ -2425,4 +2425,130 @@ function calcLineItem(id){
   document.getElementById(id+'-price').textContent=fmt(pricePerPc);
   document.getElementById(id+'-linetotal').textContent=fmt(lineTotal);
 
-  const tax
+  const tax = document.getElementById(id+'-tax').value;
+  return { lineTotal, tax };
+}
+
+function calcQuote(){
+  let subtotal=0, gstTotal=0, pstTotal=0;
+  const lineEls=[...document.getElementById('q-lines').children];
+  lineEls.forEach(el=>{
+    if(!el.id)return;
+    const res=calcLineItem(el.id);
+    if(!res)return;
+    const {lineTotal,tax}=res;
+    subtotal+=lineTotal;
+    if(tax==='GST+PST'){gstTotal+=lineTotal*0.05;pstTotal+=lineTotal*0.07;}
+    else if(tax==='GST only'){gstTotal+=lineTotal*0.05;}
+  });
+  const shipping=+document.getElementById('q-shipping').value||0;
+  const deposit=+document.getElementById('q-deposit').value||0;
+  const total=subtotal+gstTotal+pstTotal+shipping;
+  const balance=total-deposit;
+  document.getElementById('q-subtotal').textContent=fmt(subtotal);
+  document.getElementById('q-gst').textContent=fmt(gstTotal);
+  document.getElementById('q-pst').textContent=fmt(pstTotal);
+  document.getElementById('q-total').textContent=fmt(total);
+  document.getElementById('q-balance').textContent=fmt(balance);
+}
+
+function openQuoteModal(id=null){
+  editQuoteId=id;
+  quoteLineCount=0;
+  document.getElementById('q-lines').innerHTML='';
+  document.getElementById('quote-modal-title').textContent=id?'Edit quote':'New quote';
+  if(!id){
+    document.getElementById('q-num').value=makeQuoteNum();
+    document.getElementById('q-date').value=today();
+    const exp=new Date();exp.setDate(exp.getDate()+30);
+    document.getElementById('q-expiry').value=exp.toISOString().split('T')[0];
+    document.getElementById('q-status').value='Draft';
+    document.getElementById('q-customer').value='';
+    document.getElementById('q-deposit').value='';
+    document.getElementById('q-shipping').value='';
+    document.getElementById('q-notes').value='';
+    addQuoteLine();
+  }else{
+    const qt=quotes.find(x=>x['ID']===id);
+    document.getElementById('q-num').value=qt['Quote #']||'';
+    document.getElementById('q-date').value=qt['Date']||today();
+    document.getElementById('q-expiry').value=qt['Expiry']||'';
+    document.getElementById('q-status').value=qt['Status']||'Draft';
+    document.getElementById('q-customer').value=qt['Customer']||'';
+    document.getElementById('q-deposit').value=qt['Deposit']||'';
+    document.getElementById('q-shipping').value=qt['Shipping']||'';
+    document.getElementById('q-notes').value=qt['Notes']||'';
+    try{
+      const lines=JSON.parse(qt['Lines']||'[]');
+      lines.forEach(l=>addQuoteLine(l));
+    }catch(e){addQuoteLine();}
+  }
+  calcQuote();
+  document.getElementById('quote-modal').classList.add('open');
+}
+
+function editQuote(id){openQuoteModal(id)}
+
+async function delQuote(id){
+  if(!confirm('Delete this quote?'))return;
+  try{
+    await apiCall({action:'deleteRow',sheet:'Quotes',key:'ID',value:id});
+    quotes=quotes.filter(q=>q['ID']!==id);
+    renderAll();toast('Quote deleted','ok');
+  }catch(e){toast('Error deleting','err')}
+}
+
+async function saveQuote(){
+  const customer=document.getElementById('q-customer').value.trim();
+  if(!customer){alert('Please enter a customer name');return}
+  const btn=document.getElementById('quote-save-btn');
+  btn.textContent='Saving>â¦';btn.disabled=true;
+  const lineEls=[...document.getElementById('q-lines').children].filter(el=>el.id);
+  const linesData=lineEls.map(el=>{
+    const id=el.id;
+    return {
+      desc:document.getElementById(id+'-desc').value,
+      garment:document.getElementById(id+'-garment').value,
+      qty:document.getElementById(id+'-qty').value,
+      garmcost:document.getElementById(id+'-garmcost').value,
+      garmmark:document.getElementById(id+'-garmmark').value,
+      garmsship:document.getElementById(id+'-garmsship').value,
+      svc:document.getElementById(id+'-svc').value,
+      stitches:document.getElementById(id+'-stitches').value,
+      colours:document.getElementById(id+'-colours').value,
+      sleeves:document.getElementById(id+'-sleeves').value,
+      darks:document.getElementById(id+'-darks').value,
+      decsship:document.getElementById(id+'-decsship').value,
+      tax:document.getElementById(id+'-tax').value
+    };
+  });
+  const subtotal=parseFloat((document.getElementById('q-subtotal').textContent||'').replace('$',''))||0;
+  const gst=parseFloat((document.getElementById('q-gst').textContent||'').replace('$',''))||0;
+  const pst=parseFloat((document.getElementById('q-pst').textContent||'').replace('$',''))||0;
+  const total=parseFloat((document.getElementById('q-total').textContent||'').replace('$',''))||0;
+  const qid=editQuoteId||'QT-'+Date.now();
+  const row={
+    'ID':qid,
+    'Quote #':document.getElementById('q-num').value,
+    'Customer':customer,
+    'Date':document.getElementById('q-date').value,
+    'Expiry':document.getElementById('q-expiry').value,
+    'Status':document.getElementById('q-status').value,
+    'Subtotal':subtotal,'GST':gst,'PST':pst,'Total':total,
+    'Deposit':+document.getElementById('q-deposit').value||0,
+    'Shipping':+document.getElementById('q-shipping').value,0,
+    'Notes':document.getElementById('q-notes').value.trim(),
+    'Lines':JSON.stringify(linesData)
+  };
+  try{
+    await apiCall({action:'saveRow',sheet:'Quotes',keyCol:'ID',row});
+    if(editQuoteId){const idx=quotes.findIndex(q=>q['ID']===editQuoteId);if(idx>=0)quotes[idx]=row;}
+    else quotes.push(row);
+    closeModal('quote-modal');renderAll();
+    toast(editQuoteId?'Quote updated!':'Quote saved!','ok');
+  }catch(e){toast('Error saving','err')}
+  finally{btn.textContent='Save quote';btn.disabled=false}
+}
+</script>
+</body>
+</html>

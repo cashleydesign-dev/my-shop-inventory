@@ -2536,7 +2536,7 @@ async function saveQuote(){
     'Status':document.getElementById('q-status').value,
     'Subtotal':subtotal,'GST':gst,'PST':pst,'Total':total,
     'Deposit':+document.getElementById('q-deposit').value||0,
-    'Shipping':+document.getElementById('q-shipping').value,0,
+    'Shipping':+document.getElementById('q-shipping').value||0,
     'Notes':document.getElementById('q-notes').value.trim(),
     'Lines':JSON.stringify(linesData)
   };

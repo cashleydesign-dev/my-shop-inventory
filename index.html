@@ -2262,8 +2262,8 @@ function renderQuotes(){
   tb.innerHTML=[...filtered].reverse().map(qt=>`<tr>
     <td class="mono">${qt['Quote #']||'—'}</td>
     <td style="font-weight:500">${qt['Customer']||'—'}</td>
-    <td style="font-size:12px">${qt['Date']||'—'}</td>
-    <td style="font-size:12px;color:var(--text3)">${qt['Expiry']||'—'}</td>
+    <td style="font-size:12px">${(qt['Date']||'—').split('T')[0]}</td>
+    <td style="font-size:12px;color:var(--text3)">${(qt['Expiry']||'—').split('T')[0]}</td>
     <td>${fmt(qt['Subtotal'])}</td>
     <td style="color:var(--amber)">${fmt(qt['GST'])}</td>
     <td style="color:var(--amber)">${fmt(qt['PST'])}</td>
@@ -2471,8 +2471,8 @@ function openQuoteModal(id=null){
   }else{
     const qt=quotes.find(x=>x['ID']===id);
     document.getElementById('q-num').value=qt['Quote #']||'';
-    document.getElementById('q-date').value=qt['Date']||today();
-    document.getElementById('q-expiry').value=qt['Expiry']||'';
+    document.getElementById('q-date').value=(qt['Date']||today()).split('T')[0];
+    document.getElementById('q-expiry').value=(qt['Expiry']||'').split('T')[0];
     document.getElementById('q-status').value=qt['Status']||'Draft';
     document.getElementById('q-customer').value=qt['Customer']||'';
     document.getElementById('q-deposit').value=qt['Deposit']||'';

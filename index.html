@@ -237,6 +237,7 @@ tr:hover td{background:#faf8f5}
     <button class="nav-btn" onclick="goTo('quotes',this)">📋 Quotes</button>
     <button class="nav-btn" onclick="goTo('sales',this)">💰 Sales</button>
     <button class="nav-btn" onclick="goTo('expenses',this)">🧾 Expenses</button>
+    <button class="nav-btn" onclick="goTo('customers',this)">👤 Customers</button>
   </nav>
   <div class="header-right">
     <div class="sync-pill"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">Connecting…</span></div>
@@ -713,6 +714,26 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 </div>
+<!-- CUSTOMERS PAGE -->
+<div class="page" id="page-customers">
+  <div class="sec-hd">
+    <h2>Customers</h2>
+    <div style="display:flex;gap:8px">
+      <button class="ghost" onclick="importCustomers()">↓ Import from sales</button>
+      <button class="primary" onclick="openCustModal()">+ Add customer</button>
+    </div>
+  </div>
+  <div class="stats" id="cust-stats"></div>
+  <div class="toolbar">
+    <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="cust-search" placeholder="Search name, email, company…" oninput="renderCustomers()"></div>
+    <select id="cust-tag" onchange="renderCustomers()" style="width:auto">
+      <option value="">All customers</option>
+      <option>VIP</option><option>Wholesale</option><option>Retail</option><option>Corporate</option>
+    </select>
+  </div>
+  <div id="cust-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+</div>
+
 
 <!-- EXPENSE MODAL -->
 <div class="overlay" id="exp-modal">
@@ -791,8 +812,8 @@ tr:hover td{background:#faf8f5}
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec';
 
-let inventory=[], suppliers=[], sales=[], expenses=[];
-let editInvId=null, editSupId=null, editSaleId=null, editExpId=null;
+let inventory=[], suppliers=[], sales=[], expenses=[], customers=[];
+let editInvId=null, editSupId=null, editSaleId=null, editExpId=null, editCustId=null;
 let invSkuN=1;
 
 const PLAT_BADGE={'Etsy':'b-etsy','My website':'b-web','Amazon KDP':'b-kdp','Craft fair / in-person':'b-fair'};
@@ -827,13 +848,14 @@ async function apiCall(params){
 
 async function loadAll(){
   try{
-    const [inv,sup,sal,exp,svc,qt]=await Promise.all([
+    const [inv,sup,sal,exp,svc,qt,cst]=await Promise.all([
       apiCall({action:'getSheet',sheet:'Inventory'}),
       apiCall({action:'getSheet',sheet:'Suppliers'}),
       apiCall({action:'getSheet',sheet:'Sales'}),
       apiCall({action:'getSheet',sheet:'Expenses'}),
       apiCall({action:'getSheet',sheet:'Services'}),
-      apiCall({action:'getSheet',sheet:'Quotes'})
+      apiCall({action:'getSheet',sheet:'Quotes'}),
+      apiCall({action:'getSheet',sheet:'Customers'})
     ]);
     inventory=inv.rows||inv.data||[];
     suppliers=sup.rows||sup.data||[];
@@ -841,6 +863,7 @@ async function loadAll(){
     expenses=exp.rows||exp.data||[];
     services=svc.rows||svc.data||[];
     quotes=qt.rows||qt.data||[];
+    customers=cst.rows||cst.data||[];
     if(inventory.length){
       const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);
       invSkuN=Math.max(...nums)+1;
@@ -866,6 +889,7 @@ function renderAll(){
   renderQuotes();
   renderSales();
   renderExp();
+  renderCustomers();
   populateSupDropdowns();
   populateMonthFilters();
 }
@@ -1918,6 +1942,176 @@ document.querySelectorAll('.overlay').forEach(o=>{
 });
 
 loadAll();
+
+/* ===== CUSTOMERS ===== */
+function renderCustomers(){
+  if(!document.getElementById('cust-search'))return;
+  const q=document.getElementById('cust-search').value.toLowerCase();
+  const tag=document.getElementById('cust-tag').value;
+  const filtered=customers.filter(c=>{
+    const str=((c['Name']||'')+(c['Email']||'')+(c['Company']||'')).toLowerCase();
+    if(q&&!str.includes(q))return false;
+    if(tag&&c['Tag']!==tag)return false;
+    return true;
+  });
+  document.getElementById('cust-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Total customers</div><div class="stat-value">${customers.length}</div></div>
+    <div class="stat"><div class="stat-label">Shown</div><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat"><div class="stat-label">VIP</div><div class="stat-value amber">${customers.filter(c=>c['Tag']==='VIP').length}</div></div>
+    <div class="stat"><div class="stat-label">Wholesale</div><div class="stat-value green">${customers.filter(c=>c['Tag']==='Wholesale').length}</div></div>
+  `;
+  const list=document.getElementById('cust-list');
+  if(!filtered.length){
+    list.innerHTML<`<div class="card"><div class="empty"><div class="empty-icon">ð¥</div><div class="empty-title">${customers.length?'No matches':'No customers yet'}</div><div style="color:var(--text3)">${customers.length?'Try adjusting filters':'Click "+ Add customer" or "â Import from sales" to get started'}</div></div></div>`;
+    return;
+  }
+  const enriched=filtered.map(c=>{
+    const n=(c['Name']||'').toLowerCase();
+    const cs=sales.filter(s=>(s['Customer']||'').toLowerCase()===n);
+    const cq=quotes.filter(q=>(q['Customer']||'').toLowerCase()===n);
+    const spend=cs.reduce((s,i)=>s+(Number(i['Net Income'])||0),0);
+    return{...c,_sales:cs.length,_quotes:cq.length,_spend:spend};
+  });
+  list.innerHTML=`<div class="card"><div class="tbl-wrap"><table style="min-width:680px">
+    <thead><tr>
+      <th>Name</th><th>Company</th><th style="width:200px">Email / Phone</th>
+      <th style="width:90px">Tag</th><th style="width:70px">Orders</th>
+      <th style="width:90px">Spent</th><th style="width:150px">Actions</th>
+    </tr></thead>
+    <tbody>${enriched.map(c=>`<tr>
+      <td style="font-weight:500">${c['Name']||'â'}</td>
+      <td style="color:var(--text2);font-size:13px">${c['Company']||'â'}</td>
+      <td style="font-size:12px">${c['Email']?`<a href="mailto:${c['Email']}" style="color:var(--accent)">${c['Email']}</a>`:'â'}${c['Phone']?`<br><span style="color:var(--text3)">${c['Phone']}</span>`:''}</td>
+      <td>${c['Tag']?`<span class="badge">${c['Tag']}</span>`:'â'}</td>
+      <td style="text-align:center">${c['_sales']+c['_quotes']}</td>
+      <td class="profit-pos">${fmt(c['_spend'])}</td>
+      <td>
+        <button class="sm ghost" onclick="viewCust('${c['ID']}')">View</button>
+        <button class="sm ghost" onclick="openCustModal('${c['ID']}')">Edit</button>
+        <button class="sm ghost danger" onclick="delCust('${c['ID']}')">Del</button>
+      </td>
+    </tr>`).join('')}
+    </tbody>
+  </table></div></div>`;
+}
+
+function openCustModal(id=null){
+  editCustId=id;
+  document.getElementById('cust-modal-title').textContent=id?'Edit customer':'Add customer';
+  if(!id){
+    ['c-name','c-email','c-phone','c-company','c-address','c-notes'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('c-taxexempt').value='No';
+    document.getElementById('c-tag').value='';
+  }else{
+    const c=customers.find(x=>x['ID']===id);
+    document.getElementById('c-name').value=c['Name']||'';
+    document.getElementById('c-email').value=c['Email']||'';
+    document.getElementById('c-phone').value=c['Phone']||'';
+    document.getElementById('c-company').value=c['Company']||'';
+    document.getElementById('c-address').value=c['Address']||'';
+    document.getElementById('c-taxexempt').value=c['Tax Exempt']||'No';
+    document.getElementById('c-tag').value=c['Tag']||'';
+    document.getElementById('c-notes').value=c['Notes']||'';
+  }
+  document.getElementById('cust-modal').classList.add('open');
+}
+
+async function saveCust(){
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){alert('Please enter a customer name');return}
+  const btn=document.getElementById('cust-save-btn');
+  btn.textContent='Savingâ¦';btn.disabled=true;
+  const id=editCustId||'CUST-'+Date.now();
+  const existing=editCustId?customers.find(c=>c['ID']===editCustId):null;
+  const row={
+    'ID':id,'Name':name,
+    'Email':document.getElementById('c-email').value.trim(),
+    'Phone':document.getElementById('c-phone').value.trim(),
+    'Company':document.getElementById('c-company').value.trim(),
+    'Address':document.getElementById('c-address').value.trim(),
+    'Tax Exempt':document.getElementById('c-taxexempt').value,
+    'Tag':document.getElementById('c-tag').value,
+    'Notes':document.getElementById('c-notes').value.trim(),
+    'Created':existing?existing['Created']||today():today()
+  };
+  try{
+    await apiCall({action:'saveRow',sheet:'Customers',keyCol:'ID',row});
+    if(editCustId){const i=customers.findIndex(c=>c['ID']===editCustId);if(i>=0)customers[i]=row;}
+    else customers.push(row);
+    closeModal('cust-modal');renderCustomers();
+    toast(editCustId?'Customer updated!':'Customer added!','ok');
+  }catch(e){toast('Error saving customer','err')}
+  finally{btn.textContent='Save customer';btn.disabled=false}
+}
+
+async function delCust(id){
+  if(!confirm('Delete this customer?'))return;
+  try{
+    await apiCall({action:'deleteRow',sheet:'Customers',key:'ID',value:id});
+    customers=customers.filter(c=>c['ID']!==id);
+    renderCustomers();toast('Customer deleted','ok');
+  }catch(e){toast('Error deleting','err')}
+}
+
+async function importCustomers(){
+  const existing=new Set(customers.map(c=>(c['Name']||'').toLowerCase()));
+  const names=new Set([...sales.map(s=>s['Customer']),...quotes.map(q=>q['Customer'])].filter(Boolean));
+  const toImport=[...names].filter(n=>!existing.has(n.toLowerCase()));
+  if(!toImport.length){toast('No new customers to import','ok');return}
+  if(!confirm(`Import ${toImport.length} new customer${toImport.length>1?'s':''} from sales & quotes?`))return;
+  let added=0;
+  for(const name of toImport){
+    const id='CUST-'+Date.now()+'-'+added;
+    const row={'ID':id,'Name':name,'Email':'','Phone':'','Company':'','Address':'','Tax Exempt':'No','Tag':'','Notes':'','Created':today()};
+    try{await apiCall({action:'saveRow',sheet:'Customers',keyCol:'ID',row});customers.push(row);added++;}catch(e){}
+  }
+  renderCustomers();
+  toast(`Imported ${added} customer${added>1?'s':''}!`,'ok');
+}
+
+function viewCust(id){
+  const c=customers.find(x=>x['ID']===id);
+  if(!c)return;
+  const name=c['Name']||'';
+  let title=name;
+  if(c['Tag'])title+=` â ${c['Tag']}`;
+  if(c['Company'])title+=` Â· ${c['Company']}`;
+  document.getElementById('cust-profile-name').textContent=title;
+  const cs=sales.filter(s=>(s['Customer']||'').toLowerCase()===name.toLowerCase());
+  const cq=quotes.filter(q=>(q['Customer']||'').toLowerCase()===name.toLowerCase());
+  const spend=cs.reduce((s,i)=>s+(Number(i['Net Income'])||0),0);
+  const contactParts=[
+    c['Email']?`<a href="mailto:${c['Email']}" style="color:var(--accent)">${c['Email']}</a>`:'',
+    c['Phone']?`ð ${c['Phone']}`:''
+  ].filter(Boolean);
+  document.getElementById('cprof-contact').innerHTML=contactParts.join('<br>')||'<span style="color:var(--text3)">No contact info added</span>';
+  const bizParts=[
+    c['Address']?`ð ${c['Address']}`:'',
+    c['Tax Exempt']&&c['Tax Exempt']!=='No'?`ð·ï¸ Tax exempt: ${c['Tax Exempt']}`:''
+  ].filter(Boolean);
+  document.getElementById('cprof-business').innerHTML=bizParts.join('<br>')||'<span style="color:var(--text3)">No business details</span>';
+  const nw=document.getElementById('cprof-notes-wrap');
+  if(c['Notes']){nw.style.display='block';document.getElementById('cprof-notes').textContent=c['Notes'];}
+  else nw.style.display='none';
+  let hist='';
+  if(cs.length){
+    hist+=`<div style="margin-bottom:10px"><div style="font-weight:600;font-size:11px;letter-spacing:.05em;color:var(--text3);margin-bottom:6px">SALES (${cs.length}) Â· Total ${fmt(spend)}</div>`;
+    hist+=cs.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${s['Date']||'â'} Â· ${s['Product']||'â'}</span><span class="profit-pos">${fmt(s['Net Income'])}</span></div>`).join('');
+    hist+='</div>';
+  }
+  if(cq.length){
+    hist+=`<div><div style="font-weight:600;font-size:11px;letter-spacing:.05em;color:var(--text3);margin-bottom:6px">QUOTES (${cq.length})</div>`;
+    hist+=cq.map(q=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${(q['Date']||'â').split('T')[0]} Â· ${q['Quote #']||'â'}</span><span style="font-weight:600">${fmt(q['Total'])}</span></div>`).join('');
+    hist+='</div>';
+  }
+  if(!hist)hist='<div style="color:var(--text3);padding:8px 0">No orders on record yet</div>';
+  document.getElementById('cprof-history').innerHTML=hist;
+  document.getElementById('cprof-quote-btn').onclick=()=>{closeModal('cust-profile-modal');openQuoteModal();setTimeout(()=>{document.getElementById('q-customer').value=name;},50);};
+  document.getElementById('cprof-sale-btn').onclick=()=>{closeModal('cust-profile-modal');openSaleModal();setTimeout(()=>{document.getElementById('sl-customer').value=name;calcSale();},50);};
+  document.getElementById('cprof-edit-btn').onclick=()=>{closeModal('cust-profile-modal');openCustModal(id);};
+  document.getElementById('cust-profile-modal').classList.add('open');
+}
+
 </script>
 
 <!-- S&S Canada Style Picker Modal -->
@@ -2606,5 +2800,59 @@ async function saveQuote(){
   finally{btn.textContent='Save quote';btn.disabled=false}
 }
 </script>
+
+<!-- CUSTOMER MODAL -->
+<div class="overlay" id="cust-modal">
+<div class="modal">
+  <div class="modal-hd"><h2 id="cust-modal-title">Add customer</h2><button class="ghost" onclick="closeModal('cust-modal')">✕</button></div>
+  <div class="modal-bd">
+    <div class="sec-label">Contact details</div>
+    <div class="fg">
+      <label>Full name* <input type="text" id="c-name" placeholder="Jane Smith"></label>
+      <label>Email <input type="email" id="c-email" placeholder="jane@example.com"></label>
+      <label>Phone <input type="tel" id="c-phone" placeholder="+1 (604) 555-0100"></label>
+    </div>
+    <div class="sec-label">Business details</div>
+    <div class="fg">
+      <label>Company <input type="text" id="c-company" placeholder="Acme Corp (optional)"></label>
+      <label>Address <input type="text" id="c-address" placeholder="Street, City, Province"></label>
+      <label>Tag <select id="c-tag"><option value="">— none —</option><option>Retail</option><option>Wholesale</option><option>VIP</option><option>Corporate</option></select></label>
+    </div>
+    <div class="fg">
+      <label>Tax exempt? <select id="c-taxexempt"><option value="No">No — taxable</option><option value="Yes">Yes — fully exempt</option><option value="GST only">GST only</option></select></label>
+      <label style="grid-column:1/-1">Notes <textarea id="c-notes" rows="2" placeholder="Any notes about this customer…" style="width:100%;resize:vertical;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font:inherit"></textarea></label>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button onclick="closeModal('cust-modal')">Cancel</button>
+    <button class="primary" id="cust-save-btn" onclick="saveCust()">Save customer</button>
+  </div>
+</div>
+</div>
+
+<!-- CUSTOMER PROFILE MODAL -->
+<div class="overlay" id="cust-profile-modal">
+<div class="modal" style="width:min(700px,96vw)">
+  <div class="modal-hd"><h2 id="cust-profile-name">Customer</h2><button class="ghost" onclick="closeModal('cust-profile-modal')">✕</button></div>
+  <div class="modal-bd">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div><div class="sec-label">Contact</div><div id="cprof-contact" style="font-size:14px;line-height:1.9"></div></div>
+      <div><div class="sec-label">Business</div><div id="cprof-business" style="font-size:14px;line-height:1.9"></div></div>
+    </div>
+    <div id="cprof-notes-wrap" style="margin-bottom:16px;display:none">
+      <div class="sec-label">Notes</div>
+      <div id="cprof-notes" style="font-size:13px;color:var(--text2);font-style:italic;padding:8px;background:var(--bg2);border-radius:6px"></div>
+    </div>
+    <div class="sec-label">Order history</div>
+    <div id="cprof-history" style="font-size:13px;max-height:260px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button class="primary" id="cprof-quote-btn">+ New quote</button>
+      <button class="primary" id="cprof-sale-btn">+ Record sale</button>
+      <button id="cprof-edit-btn">Edit customer</button>
+    </div>
+  </div>
+</div>
+</div>
+
 </body>
 </html>

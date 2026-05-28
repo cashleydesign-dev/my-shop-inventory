@@ -1962,7 +1962,7 @@ function renderCustomers(){
   `;
   const list=document.getElementById('cust-list');
   if(!filtered.length){
-    list.innerHTML<`<div class="card"><div class="empty"><div class="empty-icon">ð¥</div><div class="empty-title">${customers.length?'No matches':'No customers yet'}</div><div style="color:var(--text3)">${customers.length?'Try adjusting filters':'Click "+ Add customer" or "â Import from sales" to get started'}</div></div></div>`;
+    list.innerHTML=`<div class="card"><div class="empty"><div class="empty-icon">ð¥</div><div class="empty-title">${customers.length?'No matches':'No customers yet'}</div><div style="color:var(--text3)">${customers.length?'Try adjusting filters':'Click "+ Add customer" or "â Import from sales" to get started'}</div></div></div>`;
     return;
   }
   const enriched=filtered.map(c=>{

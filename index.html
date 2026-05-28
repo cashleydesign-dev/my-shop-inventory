@@ -35,41 +35,41 @@
   --shadow: 0 1px 4px rgba(0,0,0,0.07);
   --shadow2: 0 4px 20px rgba(0,0,0,0.10);
 }
- 
+
 *{box-sizing:border-box;margin:0;padding:0}
- 
+
 body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
- 
+
 /* Layout */
 .app{display:flex;flex-direction:column;min-height:100vh}
- 
+
 header{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1rem;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
- 
+
 .logo{font-family:'Playfair Display',serif;font-size:20px;letter-spacing:-0.2px;white-space:nowrap}
 .logo em{color:var(--accent);font-style:normal}
- 
+
 nav{display:flex;gap:2px;flex:1;overflow-x:auto;padding:0 1rem}
- 
+
 .nav-btn{font-family:'Jost',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--r);border:none;background:transparent;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px}
 .nav-btn:hover{background:var(--surface2);color:var(--text)}
 .nav-btn.active{background:var(--accent-bg);color:var(--accent)}
- 
+
 .nav-badge{font-size:10px;background:var(--accent);color:white;border-radius:10px;padding:1px 6px;font-weight:600}
- 
+
 .header-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
- 
+
 .sync-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);background:var(--surface2);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
 .sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
- 
+
 main{flex:1;padding:1.5rem;max-width:1500px;margin:0 auto;width:100%}
- 
+
 /* Page sections */
 .page{display:none}
 .page.active{display:block}
- 
+
 /* Stats row */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;box-shadow:var(--shadow)}
@@ -79,19 +79,19 @@ main{flex:1;padding:1.5rem;max-width:1500px;margin:0 auto;width:100%}
 .stat-value.red{color:var(--red)}
 .stat-value.amber{color:var(--amber)}
 .stat-value.accent{color:var(--accent)}
- 
+
 /* Toolbar */
 .toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
- 
+
 /* Inputs */
 input,select,textarea{font-family:'Jost',sans-serif;font-size:13px;padding:8px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,92,42,0.12)}
 textarea{height:64px;resize:vertical}
- 
+
 .search-wrap{position:relative;flex:1;min-width:160px}
 .search-wrap input{padding-left:32px}
 .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
- 
+
 /* Buttons */
 button{font-family:'Jost',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 button:hover{background:var(--surface2)}
@@ -104,7 +104,7 @@ button.danger:hover{background:var(--red-bg);border-color:var(--red)}
 button.sm{padding:4px 10px;font-size:12px}
 button.ghost{border:none;background:transparent;color:var(--text2)}
 button.ghost:hover{background:var(--surface2);color:var(--text)}
- 
+
 /* Card / table */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--shadow);overflow:hidden}
 .tbl-wrap{overflow-x:auto}
@@ -113,9 +113,9 @@ th{background:var(--surface2);padding:9px 10px;text-align:left;font-size:11px;fo
 td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#faf8f5}
- 
+
 .mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
- 
+
 /* Badges */
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin:1px 2px 1px 0;white-space:nowrap}
 .b-etsy{background:#F5C4B3;color:#712B13}
@@ -129,11 +129,11 @@ tr:hover td{background:#faf8f5}
 .b-emb{background:#F5C4B3;color:#712B13}
 .b-col{background:#CECBF6;color:#3C3489}
 .b-kdpb{background:#FAC775;color:#633806}
- 
+
 .profit-pos{color:var(--green);font-weight:600}
 .profit-neg{color:var(--red);font-weight:600}
 .stock-low{color:var(--red);font-weight:600}
- 
+
 /* Modal */
 .overlay{display:none;position:fixed;inset:0;background:rgba(15,12,8,0.55);z-index:200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
 .overlay.open{display:flex}
@@ -142,32 +142,32 @@ tr:hover td{background:#faf8f5}
 .modal-hd h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:400}
 .modal-bd{padding:1.25rem 1.5rem;max-height:65vh;overflow-y:auto}
 .modal-ft{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--surface2)}
- 
+
 /* Form */
 .tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:var(--r);margin-bottom:1.25rem}
 .tab-btn{flex:1;padding:6px 8px;border:none;background:transparent;border-radius:6px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;text-align:center;transition:all .15s}
 .tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 .tab-btn:hover:not(.active){background:rgba(255,255,255,0.5)}
- 
+
 .sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .sec-label:first-child{margin-top:0}
- 
+
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .fg label,.fl label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--text2)}
 .fl{margin-bottom:10px}
- 
+
 .profit-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
 .pb-label{font-size:11px;color:var(--text3);margin-bottom:3px}
 .pb-val{font-family:'Playfair Display',serif;font-size:20px}
- 
+
 .pl-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .pl-toggle{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text2);font-weight:500;transition:all .15s}
 .pl-toggle.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
- 
+
 .sku-prev{font-size:12px;color:var(--text3);margin-top:6px;display:none}
 .sku-prev span{font-family:'JetBrains Mono',monospace;color:var(--accent)}
- 
+
 /* Stage selector */
 .stage-row{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 .stage-btn{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text2);font-weight:500;transition:all .15s}
@@ -175,7 +175,7 @@ tr:hover td{background:#faf8f5}
 .stage-btn.on-wip{background:var(--purple-bg);color:var(--purple);border-color:var(--purple)}
 .stage-btn.on-finished{background:var(--green-bg);color:var(--green);border-color:var(--green)}
 .stage-btn.on-digital{background:var(--teal-bg);color:var(--teal);border-color:var(--teal)}
- 
+
 /* Supplier card grid */
 .supplier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .sup-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;box-shadow:var(--shadow);transition:box-shadow .15s}
@@ -185,36 +185,36 @@ tr:hover td{background:#faf8f5}
 .sup-detail{font-size:12px;color:var(--text3);margin-top:2px}
 .sup-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green);font-weight:500}
 .sup-tag.api{background:var(--accent2-bg);color:var(--accent2)}
- 
+
 /* Empty state */
 .empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:0.4}
 .empty-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text2);margin-bottom:6px}
- 
+
 /* Loading */
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:3rem;color:var(--text3)}
 .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
- 
+
 /* Toast */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:white;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.ok{background:var(--green)}
 .toast.err{background:var(--red)}
- 
+
 /* Section header */
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:10px;flex-wrap:wrap}
 .sec-hd h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:400}
- 
+
 /* API sync panel */
 .api-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1.5rem;box-shadow:var(--shadow)}
 .api-panel h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .api-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .api-row input{flex:1;min-width:200px}
- 
+
 /* Expense / sales type colors */
 .type-pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
- 
+
 @media(max-width:640px){
   main{padding:1rem}
   .fg{grid-template-columns:1fr}
@@ -226,7 +226,7 @@ tr:hover td{background:#faf8f5}
 </head>
 <body>
 <div class="app">
- 
+
 <header>
   <div class="logo">My <em>Shop</em></div>
   <nav id="nav">
@@ -242,9 +242,9 @@ tr:hover td{background:#faf8f5}
     <div class="sync-pill"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">Connecting…</span></div>
   </div>
 </header>
- 
+
 <main>
- 
+
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
   <div class="sec-hd"><h2>Dashboard</h2><button onclick="loadAll()">↻ Refresh all</button></div>
@@ -269,7 +269,7 @@ tr:hover td{background:#faf8f5}
     </div>
   </div>
 </div>
- 
+
 <!-- INVENTORY -->
 <div class="page" id="page-inventory">
   <div class="sec-hd">
@@ -278,9 +278,9 @@ tr:hover td{background:#faf8f5}
       <button class="primary" onclick="openInvModal()">+ Add product</button>
     </div>
   </div>
- 
+
   <div class="stats" id="inv-stats"></div>
- 
+
   <div class="toolbar">
     <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="inv-search" placeholder="Search name, SKU, tags…" oninput="renderInv()"></div>
     <select id="inv-type" onchange="renderInv()" style="width:auto">
@@ -305,7 +305,7 @@ tr:hover td{background:#faf8f5}
       <option value="">All suppliers</option>
     </select>
   </div>
- 
+
   <div class="card">
     <div class="tbl-wrap">
       <table>
@@ -330,14 +330,14 @@ tr:hover td{background:#faf8f5}
     </div>
   </div>
 </div>
- 
+
 <!-- SUPPLIERS -->
 <div class="page" id="page-suppliers">
   <div class="sec-hd">
     <h2>Suppliers</h2>
     <button class="primary" onclick="openSupModal()">+ Add supplier</button>
   </div>
- 
+
   <div class="api-panel">
     <h3>⚡ Live supplier sync</h3>
     <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Connect S&S Canada or SanMar Canada to sync their catalog directly. You'll need your API key from your account on their website.</p>
@@ -360,21 +360,21 @@ tr:hover td{background:#faf8f5}
       </div>
     </div>
   </div>
- 
+
   <div class="supplier-grid" id="sup-grid">
     <div class="loading"><div class="spinner"></div>Loading…</div>
   </div>
 </div>
- 
+
 <!-- SALES -->
 <div class="page" id="page-sales">
   <div class="sec-hd">
     <h2>Sales log</h2>
     <button class="primary" onclick="openSaleModal()">+ Record sale</button>
   </div>
- 
+
   <div class="stats" id="sale-stats"></div>
- 
+
   <div class="toolbar">
     <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="sale-search" placeholder="Search product, platform…" oninput="renderSales()"></div>
     <select id="sale-plat" onchange="renderSales()" style="width:auto">
@@ -385,7 +385,7 @@ tr:hover td{background:#faf8f5}
       <option value="">All time</option>
     </select>
   </div>
- 
+
   <div class="card">
     <div class="tbl-wrap">
       <table style="min-width:700px">
@@ -405,7 +405,7 @@ tr:hover td{background:#faf8f5}
     </div>
   </div>
 </div>
- 
+
 <!-- EXPENSES -->
 <div class="page" id="page-expenses">
   <div class="sec-hd">
@@ -414,9 +414,9 @@ tr:hover td{background:#faf8f5}
     <button onclick="triggerReceiptScan()" style="display:flex;align-items:center;gap:6px">📷 Scan receipt</button>
     <input type="file" id="receipt-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this)">
   </div>
- 
+
   <div class="stats" id="exp-stats"></div>
- 
+
   <div class="toolbar">
     <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="exp-search" placeholder="Search description, supplier…" oninput="renderExp()"></div>
     <select id="exp-cat" onchange="renderExp()" style="width:auto">
@@ -435,7 +435,7 @@ tr:hover td{background:#faf8f5}
       <option value="">All time</option>
     </select>
   </div>
- 
+
   <div class="card">
     <div class="tbl-wrap">
       <table style="min-width:700px">
@@ -457,7 +457,7 @@ tr:hover td{background:#faf8f5}
     </div>
   </div>
 </div>
- 
+
 <!-- SERVICES PAGE -->
 <div class="page" id="page-services">
   <div class="sec-hd">
@@ -469,7 +469,7 @@ tr:hover td{background:#faf8f5}
     <div class="loading"><div class="spinner"></div>Loading…</div>
   </div>
 </div>
- 
+
 <!-- QUOTES PAGE -->
 <div class="page" id="page-quotes">
   <div class="sec-hd">
@@ -505,10 +505,10 @@ tr:hover td{background:#faf8f5}
     </div>
   </div>
 </div>
- 
+
 </main>
 </div>
- 
+
 <!-- INVENTORY MODAL -->
 <div class="overlay" id="inv-modal">
 <div class="modal">
@@ -564,7 +564,7 @@ tr:hover td{background:#faf8f5}
       </div>
       <div class="sku-prev" id="i-sku-prev">SKU will be: <span id="i-sku-val"></span></div>
     </div>
- 
+
     <div id="inv-tab1" style="display:none">
       <div class="sec-label">Costs</div>
       <div class="fg">
@@ -595,7 +595,7 @@ tr:hover td{background:#faf8f5}
         </label>
       </div>
     </div>
- 
+
     <div id="inv-tab2" style="display:none">
       <div class="sec-label">Platforms listed on</div>
       <div class="pl-row" id="i-plat-row">
@@ -618,7 +618,7 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 </div>
- 
+
 <!-- SUPPLIER MODAL -->
 <div class="overlay" id="sup-modal">
 <div class="modal">
@@ -653,7 +653,7 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 </div>
- 
+
 <!-- SALE MODAL -->
 <div class="overlay" id="sale-modal">
 <div class="modal">
@@ -696,7 +696,7 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 </div>
- 
+
 <!-- EXPENSE MODAL -->
 <div class="overlay" id="exp-modal">
 <div class="modal" style="width:min(640px,96vw)">
@@ -768,36 +768,36 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 </div>
- 
+
 <div class="toast" id="toast"></div>
- 
+
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec';
- 
+
 let inventory=[], suppliers=[], sales=[], expenses=[];
 let editInvId=null, editSupId=null, editSaleId=null, editExpId=null;
 let invSkuN=1;
- 
+
 const PLAT_BADGE={'Etsy':'b-etsy','My website':'b-web','Amazon KDP':'b-kdp','Craft fair / in-person':'b-fair'};
 const STAGE_BADGE={'Raw':'b-raw','WIP':'b-wip','Finished':'b-finished','Digital':'b-digital'};
 const TYPE_BADGE={'Embroidered':'b-emb','Digital Embroidery':'b-digital','Coloring Book':'b-col','KDP Book':'b-kdpb','Raw Material':'b-raw'};
- 
+
 function fmt(v){return '$'+Number(v||0).toFixed(2)}
 function fmtPct(v){return Number(v||0).toFixed(1)+'%'}
 function today(){return new Date().toISOString().split('T')[0]}
- 
+
 function toast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show '+(type==='ok'?'ok':type==='err'?'err':'');
   setTimeout(()=>t.className='toast',3000);
 }
- 
+
 function setSyncState(s){
   const d=document.getElementById('syncDot'),t=document.getElementById('syncTxt');
   d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
   t.textContent=s==='syncing'?'Syncing…':s==='error'?'Error':'Connected';
 }
- 
+
 async function apiCall(params){
   setSyncState('syncing');
   try{
@@ -807,7 +807,7 @@ async function apiCall(params){
     return d;
   }catch(e){setSyncState('error');throw e;}
 }
- 
+
 async function loadAll(){
   try{
     const [inv,sup,sal,exp,svc,qt]=await Promise.all([
@@ -840,7 +840,7 @@ async function loadAll(){
     renderAll();
   }
 }
- 
+
 function renderAll(){
   renderDashboard();
   renderInv();
@@ -852,7 +852,7 @@ function renderAll(){
   populateSupDropdowns();
   populateMonthFilters();
 }
- 
+
 /* ===== NAVIGATION ===== */
 function goTo(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -860,7 +860,7 @@ function goTo(page,btn){
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
 }
- 
+
 /* ===== DASHBOARD ===== */
 function renderDashboard(){
   const finished=inventory.filter(i=>i['Stage']==='Finished').reduce((s,i)=>s+(Number(i['Qty'])||0),0);
@@ -872,7 +872,7 @@ function renderDashboard(){
   const salesTotal=monthlySales.reduce((s,i)=>s+(Number(i['Net Income'])||0),0);
   const expTotal=monthlyExp.reduce((s,i)=>s+(Number(i['Total Paid'])||0),0);
   const net=salesTotal-expTotal;
- 
+
   document.getElementById('d-products').textContent=inventory.length;
   document.getElementById('d-finished').textContent=finished;
   document.getElementById('d-raw').textContent=raw;
@@ -883,18 +883,18 @@ function renderDashboard(){
   nel.textContent=fmt(net);
   nel.className='stat-value '+(net>=0?'green':'red');
   document.getElementById('d-sups').textContent=suppliers.length;
- 
+
   const recentSales=sales.slice(-5).reverse();
   document.getElementById('d-recent-sales').innerHTML=recentSales.length?
     recentSales.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${s['Product']||'—'} <span style="color:var(--text3);font-size:11px">${s['Platform']||''}</span></span><span style="font-weight:600;color:var(--green)">${fmt(s['Net Income'])}</span></div>`).join('')
     :'<span style="color:var(--text3)">No sales recorded yet</span>';
- 
+
   const lowItems=inventory.filter(i=>i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
   document.getElementById('d-low-items').innerHTML=lowItems.length?
     lowItems.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${i['Product Name']||'—'}</span><span style="color:var(--red);font-weight:600">${i['Qty']} left</span></div>`).join('')
     :'<span style="color:var(--green)">✓ All stock levels OK</span>';
 }
- 
+
 /* ===== INVENTORY ===== */
 function renderInv(){
   const q=document.getElementById('inv-search').value.toLowerCase();
@@ -902,13 +902,13 @@ function renderInv(){
   const stage=document.getElementById('inv-stage').value;
   const brand=document.getElementById('inv-brand').value;
   const sup=document.getElementById('inv-sup').value;
- 
+
   // Populate brand dropdown dynamically
   const brandSel=document.getElementById('inv-brand');
   const currentBrand=brandSel.value;
   const allBrands=[...new Set(inventory.map(i=>(i['Tags']||'').trim()).filter(Boolean))].sort();
   brandSel.innerHTML='<option value="">All brands</option>'+allBrands.map(b=>`<option value="${b}" ${b===currentBrand?'selected':''}>${b}</option>`).join('');
- 
+
   const filtered=inventory.filter(i=>{
     const str=((i['Product Name']||'')+(i['SKU']||'')+(i['Tags']||'')+(i['Color']||'')+(i['Notes']||'')).toLowerCase();
     if(q&&!str.includes(q))return false;
@@ -918,7 +918,7 @@ function renderInv(){
     if(sup&&i['Supplier']!==sup)return false;
     return true;
   });
- 
+
   const finished=filtered.filter(i=>i['Stage']==='Finished').length;
   const raw=filtered.filter(i=>i['Stage']==='Raw').length;
   const wip=filtered.filter(i=>i['Stage']==='WIP').length;
@@ -930,13 +930,13 @@ function renderInv(){
     <div class="stat"><div class="stat-label">Work in progress</div><div class="stat-value" style="color:var(--purple)">${wip}</div></div>
     <div class="stat"><div class="stat-label">Digital products</div><div class="stat-value" style="color:var(--teal)">${digital}</div></div>
   `;
- 
+
   const tb=document.getElementById('inv-tbody');
   if(!filtered.length){
     tb.innerHTML=`<tr><td colspan="14"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">${inventory.length?'No matches':'No products yet'}</div><div>${inventory.length?'Try adjusting your filters':'Click "+ Add product" to get started'}</div></div></td></tr>`;
     return;
   }
- 
+
   tb.innerHTML=filtered.map(i=>{
     const plats=(i['Platforms']||'').split(',').map(p=>p.trim()).filter(Boolean);
     const cost=Number(i['Total Cost']||0);
@@ -966,13 +966,13 @@ function renderInv(){
     </tr>`;
   }).join('');
 }
- 
+
 function makeSKU(cat){
   const n=String(invSkuN).padStart(4,'0');
   invSkuN++;
   return cat+'-'+n;
 }
- 
+
 function updateSKU(){
   const cat=document.getElementById('i-cat').value;
   const name=document.getElementById('i-name').value.trim();
@@ -982,7 +982,7 @@ function updateSKU(){
     document.getElementById('i-sku-prev').style.display='block';
   }else document.getElementById('i-sku-prev').style.display='none';
 }
- 
+
 function setStage(btn,stage){
   document.getElementById('i-stage').value=stage;
   document.querySelectorAll('.stage-btn').forEach(b=>{
@@ -990,7 +990,7 @@ function setStage(btn,stage){
     if(b===btn)b.className='stage-btn on-'+stage.toLowerCase();
   });
 }
- 
+
 function toggleDigital(){
   const type=document.getElementById('i-type').value;
   const isDigital=type==='Digital Embroidery'||type==='Coloring Book'||type==='KDP Book';
@@ -999,9 +999,9 @@ function toggleDigital(){
     document.getElementById('i-qty-row').style.opacity='0.5';
   }
 }
- 
+
 function togglePl(btn){btn.classList.toggle('on')}
- 
+
 function calcMargin(){
   const mat=+document.getElementById('i-mat').value||0;
   const lab=+document.getElementById('i-lab').value||0;
@@ -1023,7 +1023,7 @@ function calcMargin(){
   pel.textContent=fmt(profit);
   pel.style.color=profit>=0?'var(--green)':'var(--red)';
 }
- 
+
 function calcSale(){
   const qty=+document.getElementById('sl-qty').value||0;
   const price=+document.getElementById('sl-price').value||0;
@@ -1040,7 +1040,7 @@ function calcSale(){
   nel.textContent=fmt(net);
   nel.style.color=net>=0?'var(--green)':'var(--red)';
 }
- 
+
 function calcExp(){
   const amt=+document.getElementById('ex-amt').value||0;
   const gst=+document.getElementById('ex-gst').value||0;
@@ -1051,7 +1051,7 @@ function calcExp(){
   document.getElementById('ex-pst-show').textContent=fmt(pst);
   document.getElementById('ex-total').textContent=fmt(total);
 }
- 
+
 function switchTab(prefix,n,btn){
   [0,1,2].forEach(i=>{
     const el=document.getElementById(prefix==='inv'?'inv-tab'+i:'');
@@ -1062,7 +1062,7 @@ function switchTab(prefix,n,btn){
   }
   btn.closest('.tabs').querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
 }
- 
+
 function openInvModal(sku=null){
   editInvId=sku;
   document.querySelectorAll('#inv-modal .tab-btn')[0].click();
@@ -1118,9 +1118,9 @@ function openInvModal(sku=null){
   updateSKU();calcMargin();
   document.getElementById('inv-modal').classList.add('open');
 }
- 
+
 function editInv(sku){openInvModal(sku)}
- 
+
 async function delInv(sku){
   if(!confirm('Delete this product?'))return;
   try{
@@ -1130,13 +1130,13 @@ async function delInv(sku){
     toast('Product deleted','ok');
   }catch(e){toast('Error deleting','err')}
 }
- 
+
 async function saveInv(){
   const name=document.getElementById('i-name').value.trim();
   if(!name){alert('Please enter a product name');return}
   const btn=document.getElementById('inv-save-btn');
   btn.textContent='Saving…';btn.disabled=true;
- 
+
   const cat=document.getElementById('i-cat').value;
   const mat=+document.getElementById('i-mat').value||0;
   const lab=+document.getElementById('i-lab').value||0;
@@ -1154,7 +1154,7 @@ async function saveInv(){
   const profit=price-totalCost-etsyFee-(price*platFee);
   const sku=editInvId||makeSKU(cat);
   const plats=[...document.querySelectorAll('.pl-toggle.on')].map(b=>b.textContent).join(', ');
- 
+
   const row={
     'SKU':sku,'Product Name':name,'Type':document.getElementById('i-type').value,
     'Stage':document.getElementById('i-stage').value,
@@ -1173,7 +1173,7 @@ async function saveInv(){
     'Design File':document.getElementById('i-design').value.trim(),
     'Notes':document.getElementById('i-notes').value.trim()
   };
- 
+
   try{
     await apiCall({action:'saveRow',sheet:'Inventory',keyCol:'SKU',row});
     if(editInvId){const idx=inventory.findIndex(i=>i['SKU']===editInvId);if(idx>=0)inventory[idx]=row;}
@@ -1183,7 +1183,7 @@ async function saveInv(){
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save product';btn.disabled=false}
 }
- 
+
 /* ===== SUPPLIERS ===== */
 function renderSuppliers(){
   const grid=document.getElementById('sup-grid');
@@ -1220,7 +1220,7 @@ function renderSuppliers(){
     </div>`;
   }).join('');
 }
- 
+
 function openSupModal(id=null){
   editSupId=id;
   document.getElementById('sup-modal-title').textContent=id?'Edit supplier':'Add supplier';
@@ -1242,9 +1242,9 @@ function openSupModal(id=null){
   }
   document.getElementById('sup-modal').classList.add('open');
 }
- 
+
 function editSup(id){openSupModal(id)}
- 
+
 async function delSup(id){
   if(!confirm('Delete this supplier?'))return;
   try{
@@ -1253,7 +1253,7 @@ async function delSup(id){
     renderAll();toast('Supplier deleted','ok');
   }catch(e){toast('Error deleting','err')}
 }
- 
+
 async function saveSup(){
   const name=document.getElementById('s-name').value.trim();
   if(!name){alert('Please enter a supplier name');return}
@@ -1280,7 +1280,7 @@ async function saveSup(){
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save supplier';btn.disabled=false}
 }
- 
+
 /* ===== SALES ===== */
 function renderSales(){
   const q=document.getElementById('sale-search').value.toLowerCase();
@@ -1293,7 +1293,7 @@ function renderSales(){
     if(month&&!(s['Date']||'').startsWith(month))return false;
     return true;
   });
- 
+
   const total=filtered.reduce((s,i)=>s+(Number(i['Net Income'])||0),0);
   const gross=filtered.reduce((s,i)=>s+(Number(i['Gross'])||0),0);
   const fees=filtered.reduce((s,i)=>s+(Number(i['Fees'])||0),0);
@@ -1303,7 +1303,7 @@ function renderSales(){
     <div class="stat"><div class="stat-label">Total fees</div><div class="stat-value amber">${fmt(fees)}</div></div>
     <div class="stat"><div class="stat-label">Net income</div><div class="stat-value green">${fmt(total)}</div></div>
   `;
- 
+
   const tb=document.getElementById('sale-tbody');
   if(!filtered.length){
     tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">💰</div><div class="empty-title">${sales.length?'No matches':'No sales recorded yet'}</div></div></td></tr>`;
@@ -1324,7 +1324,7 @@ function renderSales(){
     </td>
   </tr>`).join('');
 }
- 
+
 function openSaleModal(id=null){
   editSaleId=id;
   document.getElementById('sale-modal-title').textContent=id?'Edit sale':'Record sale';
@@ -1353,9 +1353,9 @@ function openSaleModal(id=null){
   calcSale();
   document.getElementById('sale-modal').classList.add('open');
 }
- 
+
 function editSale(id){openSaleModal(id)}
- 
+
 async function delSale(id){
   if(!confirm('Delete this sale?'))return;
   try{
@@ -1364,7 +1364,7 @@ async function delSale(id){
     renderAll();toast('Sale deleted','ok');
   }catch(e){toast('Error deleting','err')}
 }
- 
+
 async function saveSale(){
   const product=document.getElementById('sl-product').value;
   if(!product){alert('Please select a product');return}
@@ -1397,7 +1397,7 @@ async function saveSale(){
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save sale';btn.disabled=false}
 }
- 
+
 /* ===== EXPENSES ===== */
 function renderExp(){
   const q=document.getElementById('exp-search').value.toLowerCase();
@@ -1410,7 +1410,7 @@ function renderExp(){
     if(month&&!(e['Date']||'').startsWith(month))return false;
     return true;
   });
- 
+
   const total=filtered.reduce((s,i)=>s+(Number(i['Total Paid'])||0),0);
   const gst=filtered.reduce((s,i)=>s+(Number(i['GST Paid'])||0),0);
   const pst=filtered.reduce((s,i)=>s+(Number(i['PST Paid'])||0),0);
@@ -1420,7 +1420,7 @@ function renderExp(){
     <div class="stat"><div class="stat-label">GST paid</div><div class="stat-value amber">${fmt(gst)}</div></div>
     <div class="stat"><div class="stat-label">PST paid</div><div class="stat-value amber">${fmt(pst)}</div></div>
   `;
- 
+
   const tb=document.getElementById('exp-tbody');
   if(!filtered.length){
     tb.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${expenses.length?'No matches':'No expenses recorded yet'}</div></div></td></tr>`;
@@ -1443,7 +1443,7 @@ function renderExp(){
     </td>
   </tr>`).join('');
 }
- 
+
 function openExpModal(id=null){
   editExpId=id;
   document.getElementById('exp-modal-title').textContent=id?'Edit expense':'Add expense';
@@ -1477,9 +1477,9 @@ function openExpModal(id=null){
   calcExp();
   document.getElementById('exp-modal').classList.add('open');
 }
- 
+
 function editExp(id){openExpModal(id)}
- 
+
 async function delExp(id){
   if(!confirm('Delete this expense?'))return;
   try{
@@ -1488,7 +1488,7 @@ async function delExp(id){
     renderAll();toast('Expense deleted','ok');
   }catch(e){toast('Error deleting','err')}
 }
- 
+
 async function saveExp(){
   const desc=document.getElementById('ex-desc').value.trim();
   if(!desc){alert('Please enter a description');return}
@@ -1520,13 +1520,13 @@ async function saveExp(){
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save expense';btn.disabled=false}
 }
- 
+
 /* ===== RECEIPT SCANNING ===== */
 function triggerReceiptScan() {
   document.getElementById('receipt-file-input').value = '';
   document.getElementById('receipt-file-input').click();
 }
- 
+
 async function handleReceiptFile(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1556,7 +1556,7 @@ async function handleReceiptFile(input) {
     toast('Receipt scan error: ' + e.message, 'err');
   }
 }
- 
+
 function compressImageToDataURL(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -1574,14 +1574,14 @@ function compressImageToDataURL(file, maxWidth, quality) {
     img.src = url;
   });
 }
- 
+
 function parseReceiptText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const r = { vendor: '', date: '', description: '', subtotal: '', gst: '', pst: '', total: '', receiptNum: '' };
- 
+
   // Vendor = first meaningful line (skip very short lines)
   r.vendor = lines.find(l => l.length > 3) || '';
- 
+
   // Date — try several common formats
   const datePats = [
     /\b(\d{4}-\d{2}-\d{2})\b/,
@@ -1589,11 +1589,11 @@ function parseReceiptText(text) {
     /\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s*\d{4})\b/i,
   ];
   for (const p of datePats) { const m = text.match(p); if (m) { r.date = m[1]; break; } }
- 
+
   // Receipt / invoice number
   const numM = text.match(/(?:receipt|invoice|order|trans(?:action)?|ref(?:erence)?)[#\s.:No-]*([A-Z0-9\-]{4,})/i);
   if (numM) r.receiptNum = numM[1];
- 
+
   // Amounts — scan every line for labelled dollar amounts
   lines.forEach(line => {
     const amt = (label) => {
@@ -1609,7 +1609,7 @@ function parseReceiptText(text) {
       if (m) r.total = parseFloat(m[1].replace(/,/g,'')).toFixed(2);
     }
   });
- 
+
   // Back-calculate subtotal if missing but total + taxes known
   if (!r.subtotal && r.total && (r.gst || r.pst)) {
     const sub = parseFloat(r.total) - parseFloat(r.gst||0) - parseFloat(r.pst||0);
@@ -1617,17 +1617,17 @@ function parseReceiptText(text) {
   }
   // If still no subtotal but we have a total, use total as subtotal
   if (!r.subtotal && r.total) r.subtotal = r.total;
- 
+
   // Build a description from vendor + first product-like line
   r.description = r.vendor;
- 
+
   return r;
 }
- 
+
 function prefillExpenseFromReceipt(p) {
   // Open the expense modal fresh
   openExpModal();
- 
+
   // Fill in what we found
   if (p.vendor)     { document.getElementById('ex-desc').value = p.vendor; }
   if (p.date) {
@@ -1639,14 +1639,14 @@ function prefillExpenseFromReceipt(p) {
   if (p.gst)        document.getElementById('ex-gst').value   = p.gst;
   if (p.pst)        document.getElementById('ex-pst').value   = p.pst;
   if (p.receiptNum) document.getElementById('ex-receipt').value = p.receiptNum;
- 
+
   // Recalculate the totals display
   calcExp();
 }
- 
+
 /* ===== HELPERS ===== */
 function closeModal(id){document.getElementById(id).classList.remove('open')}
- 
+
 function populateSupDropdowns(){
   const opts='<option value="">— None —</option>'+suppliers.map(s=>`<option value="${s['Supplier Name']||''}">${s['Supplier Name']||''}</option>`).join('');
   ['i-supplier','inv-sup'].forEach(id=>{
@@ -1659,7 +1659,7 @@ function populateSupDropdowns(){
     }
   });
 }
- 
+
 function populateMonthFilters(){
   const allDates=[...sales.map(s=>s['Date']),...expenses.map(e=>e['Date'])].filter(Boolean);
   const months=[...new Set(allDates.map(d=>d.slice(0,7)))].sort().reverse();
@@ -1670,11 +1670,11 @@ function populateMonthFilters(){
     }
   });
 }
- 
+
 /* ===== S&S CANADA SYNC (Style-First) ===== */
 const SNS_ACCT = '436247';
 const SNS_BASE = 'https://api-ca.ssactivewear.com/V2';
- 
+
 const SNS_CAT_NAMES = {
   1258:'T-Shirts', 1259:'T-Shirts', 1260:'T-Shirts', 1261:'T-Shirts',
   899:'Fleece & Outerwear', 384:'Bottoms', 900:'Hats & Bags', 53:'Accessories'
@@ -1683,10 +1683,10 @@ const SNS_CAT_SKU = {
   1258:'TEE', 1259:'TEE', 1260:'TEE', 1261:'TEE',
   899:'FLC', 384:'BTM', 900:'HAT', 53:'ACC'
 };
- 
+
 let snsStyles = [];
 let snsSelected = new Set();
- 
+
 async function syncSNS() {
   const keyEl = document.getElementById('sns-key');
   const apiKey = keyEl.value.trim() || localStorage.getItem('sns_api_key') || '';
@@ -1709,12 +1709,12 @@ async function syncSNS() {
     openStylePickerModal();
   } catch(e) { toast('Error: ' + e.message, 'err'); }
 }
- 
+
 function openStylePickerModal() {
   renderStylePicker('', '');
   document.getElementById('sns-preview-modal').classList.add('open');
 }
- 
+
 function renderStylePicker(search, activeCat) {
   const q = search.toLowerCase();
   const cats = {};
@@ -1726,7 +1726,7 @@ function renderStylePicker(search, activeCat) {
   });
   const catNames = Object.keys(cats).sort();
   if (!activeCat || !cats[activeCat]) activeCat = catNames[0] || '';
- 
+
   document.getElementById('sns-cat-tabs').innerHTML = catNames.map(cat => {
     const cnt = (cats[cat] || []).filter(s =>
       !q || (s.title || s.styleName || '').toLowerCase().includes(q) || String(s.styleID || '').includes(q)
@@ -1735,18 +1735,18 @@ function renderStylePicker(search, activeCat) {
       onclick="renderStylePicker(document.getElementById('sns-search').value,'${cat.replace(/'/g,"\'")}')"
       style="border-radius:20px;margin:2px">${cat} <span style="opacity:.7">${cnt}</span></button>`;
   }).join('');
- 
+
   const catStyles = (cats[activeCat] || []).filter(s =>
     !q || (s.title || s.styleName || '').toLowerCase().includes(q) || String(s.styleID || '').includes(q)
   );
   document.getElementById('sns-count').textContent = snsSelected.size + ' styles selected';
- 
+
   if (!catStyles.length) {
     document.getElementById('sns-tbody').innerHTML =
       `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3)">No styles found</td></tr>`;
     return;
   }
- 
+
   document.getElementById('sns-tbody').innerHTML = catStyles.map(s => {
     const id = String(s.styleID || s.StyleID || '');
     const name = s.title || s.styleName || s.Title || 'S&S Style';
@@ -1763,7 +1763,7 @@ function renderStylePicker(search, activeCat) {
     </tr>`;
   }).join('');
 }
- 
+
 function toggleStyleCheck(id, row) {
   const cb = row.querySelector('.sty-chk');
   if (snsSelected.has(String(id))) {
@@ -1778,7 +1778,7 @@ function toggleStyleCheck(id, row) {
   document.getElementById('sns-count').textContent = snsSelected.size + ' styles selected';
   localStorage.setItem('sns_selected', JSON.stringify([...snsSelected]));
 }
- 
+
 async function syncSelectedStyles() {
   if (!snsSelected.size) { toast('No styles selected', 'err'); return; }
   const apiKey = localStorage.getItem('sns_api_key') || '';
@@ -1844,11 +1844,11 @@ async function syncSelectedStyles() {
   renderAll();
   toast('✓ Synced ' + totalImported + ' variants from ' + styleIds.length + ' styles!', 'ok');
 }
- 
+
 function syncSanmar() {
   toast('SanMar Canada integration — coming soon!', '');
 }
- 
+
 window.addEventListener('load', () => {
   const savedKey = localStorage.getItem('sns_api_key');
   if (savedKey) {
@@ -1856,14 +1856,14 @@ window.addEventListener('load', () => {
     if (el) el.value = savedKey;
   }
 });  
- 
+
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
 });
- 
+
 loadAll();
 </script>
- 
+
 <!-- S&S Canada Style Picker Modal -->
 <div class="overlay" id="sns-preview-modal">
 <div class="modal" style="width:min(800px,96vw)">
@@ -1908,7 +1908,7 @@ loadAll();
   </div>
 </div>
 </div>
- 
+
 <!-- SERVICE MODAL -->
 <div class="overlay" id="svc-modal">
 <div class="modal" style="width:min(580px,96vw)">
@@ -1938,7 +1938,7 @@ loadAll();
         <option>Other</option>
       </select></label>
     </div>
- 
+
     <!-- Standard rate fields -->
     <div id="sv-standard-fields">
       <div class="sec-label">Pricing</div>
@@ -1955,7 +1955,7 @@ loadAll();
         </select></label>
       </div>
     </div>
- 
+
     <!-- Embroidery specific -->
     <div id="sv-emb-fields" style="display:none">
       <div class="sec-label">Embroidery rates</div>
@@ -1967,7 +1967,7 @@ loadAll();
         <label>Color change fee ($) <input type="number" id="sv-emb-color" min="0" step="0.01" placeholder="0.00"></label>
       </div>
     </div>
- 
+
     <!-- Screen printing grid - Production Habit built in -->
     <div id="sv-screen-fields" style="display:none">
       <div class="sec-label">Screen printing — Production Habit 2026 grid is pre-loaded</div>
@@ -1978,7 +1978,7 @@ loadAll();
       </div>
       <p style="font-size:12px;color:var(--text3);margin-top:8px">Pricing grid: 15 quantity tiers × 8 colour options. Updates automatically when you change setup/markup.</p>
     </div>
- 
+
     <div class="fl" style="margin-top:10px"><label>Notes <textarea id="sv-notes" placeholder="Turnaround time, file requirements, minimums, special conditions…"></textarea></label></div>
   </div>
   <div class="modal-ft">
@@ -1987,7 +1987,7 @@ loadAll();
   </div>
 </div>
 </div>
- 
+
 <!-- QUOTE MODAL -->
 <div class="overlay" id="quote-modal">
 <div class="modal" style="width:min(720px,96vw)">
@@ -2004,17 +2004,17 @@ loadAll();
       </select></label>
       <label>Deposit required ($) <input type="number" id="q-deposit" min="0" step="0.01" placeholder="0.00" oninput="calcQuote()"></label>
     </div>
- 
+
     <div class="sec-label" style="margin-top:16px">Line items</div>
     <div id="q-lines"></div>
     <button style="margin-top:10px;width:100%" onclick="addQuoteLine()">+ Add line item</button>
- 
+
     <div class="sec-label" style="margin-top:16px">Tax & totals</div>
     <div class="fg">
       <label>Outbound shipping ($) <input type="number" id="q-shipping" min="0" step="0.01" placeholder="0.00" oninput="calcQuote()"></label>
       <label>Notes <input type="text" id="q-notes" placeholder="Special instructions, terms…"></label>
     </div>
- 
+
     <div class="profit-box" style="margin-top:12px;grid-template-columns:repeat(5,1fr)">
       <div><div class="pb-label">Subtotal</div><div class="pb-val" id="q-subtotal">$0.00</div></div>
       <div><div class="pb-label">GST (5%)</div><div class="pb-val" id="q-gst">$0.00</div></div>
@@ -2029,7 +2029,7 @@ loadAll();
   </div>
 </div>
 </div>
- 
+
 <script>
 // ===== PRODUCTION HABIT 2026 PRICE GRID =====
 const PH_GRID = {
@@ -2045,7 +2045,7 @@ const PH_GRID = {
     8:   [36.64,18.31, 9.16, 8.68, 7.81, 6.84, 6.25, 5.69, 5.30, 5.05, 4.61, 4.28, 3.57, 3.01, 2.70]
   }
 };
- 
+
 // Standard garment markup tiers
 const MARKUP_TIERS = [
   {min:1,   max:23,  markup:0.50},
@@ -2055,12 +2055,12 @@ const MARKUP_TIERS = [
   {min:72,  max:95,  markup:0.35},
   {min:96,  max:Infinity, markup:0.33}
 ];
- 
+
 function getMarkupForQty(qty) {
   const tier = MARKUP_TIERS.find(t => qty >= t.min && qty <= t.max);
   return tier ? tier.markup : 0.50;
 }
- 
+
 function getPHPrice(qty, colours) {
   const qtyTiers = PH_GRID.qty;
   let qtyIdx = 0;
@@ -2070,25 +2070,25 @@ function getPHPrice(qty, colours) {
   const col = Math.min(Math.max(colours, 1), 8);
   return PH_GRID.cols[col][qtyIdx];
 }
- 
+
 // ===== SERVICES =====
 let services = [], editSvcId = null;
 let quotes = [], editQuoteId = null, quoteLineCount = 0;
 let quoteN = 1;
- 
+
 function makeQuoteNum() {
   const n = String(quoteN).padStart(4,'0');
   quoteN++;
   return 'Q-' + n;
 }
- 
+
 function toggleSvcType() {
   const type = document.getElementById('sv-type').value;
   document.getElementById('sv-standard-fields').style.display = type === 'embroidery' || type === 'screen' ? 'none' : 'block';
   document.getElementById('sv-emb-fields').style.display = type === 'embroidery' ? 'block' : 'none';
   document.getElementById('sv-screen-fields').style.display = type === 'screen' ? 'block' : 'none';
 }
- 
+
 function renderServices() {
   const total = services.length;
   const emb = services.filter(s=>s['Service Type']==='embroidery').length;
@@ -2098,19 +2098,19 @@ function renderServices() {
     <div class="stat"><div class="stat-label">Embroidery</div><div class="stat-value accent">${emb}</div></div>
     <div class="stat"><div class="stat-label">Screen printing</div><div class="stat-value">${screen}</div></div>
   `;
- 
+
   const grid = document.getElementById('svc-grid');
   if(!services.length) {
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⚙️</div><div class="empty-title">No services yet</div><div>Add your first service to start building quotes</div></div>`;
     return;
   }
- 
+
   const typeLabels = {
     embroidery:'Embroidery', screen:'Screen printing', dtf:'DTF printing',
     perpiece:'Per piece', sqinch:'Per sq inch', hourly:'Hourly',
     flatfee:'Flat fee', markup:'Markup %'
   };
- 
+
   grid.innerHTML = services.map(s => {
     const initials = (s['Service Name']||'?').slice(0,2).toUpperCase();
     const type = s['Service Type']||'';
@@ -2118,7 +2118,7 @@ function renderServices() {
     if(type==='embroidery') rateDisplay = '$'+(s['Emb Rate']||1.50)+'/1,000 stitches';
     else if(type==='screen') rateDisplay = 'Production Habit grid × '+(s['Screen Markup']||2);
     else rateDisplay = '$'+(s['Base Rate']||0)+' '+(s['Unit']||'');
- 
+
     return `<div class="sup-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         <div class="sup-avatar">${initials}</div>
@@ -2140,7 +2140,7 @@ function renderServices() {
     </div>`;
   }).join('');
 }
- 
+
 function openSvcModal(id=null) {
   editSvcId = id;
   document.getElementById('svc-modal-title').textContent = id ? 'Edit service' : 'Add service';
@@ -2180,9 +2180,9 @@ function openSvcModal(id=null) {
   toggleSvcType();
   document.getElementById('svc-modal').classList.add('open');
 }
- 
+
 function editSvc(id){openSvcModal(id)}
- 
+
 async function delSvc(id){
   if(!confirm('Delete this service?'))return;
   try{
@@ -2192,7 +2192,7 @@ async function delSvc(id){
     toast('Service deleted','ok');
   }catch(e){toast('Error deleting','err')}
 }
- 
+
 async function saveSvc(){
   const name=document.getElementById('sv-name').value.trim();
   if(!name){alert('Please enter a service name');return}
@@ -2231,7 +2231,7 @@ async function saveSvc(){
   }catch(e){toast('Error saving','err')}
   finally{btn.textContent='Save service';btn.disabled=false}
 }
- 
+
 // ===== QUOTES =====
 function renderQuotes(){
   const q=document.getElementById('quote-search').value.toLowerCase();
@@ -2242,7 +2242,7 @@ function renderQuotes(){
     if(st&&qt['Status']!==st)return false;
     return true;
   });
- 
+
   const totalVal=filtered.reduce((s,i)=>s+(Number(i['Total'])||0),0);
   const approved=filtered.filter(q=>q['Status']==='Approved').length;
   const pending=filtered.filter(q=>q['Status']==='Sent'||q['Status']==='Draft').length;
@@ -2252,7 +2252,7 @@ function renderQuotes(){
     <div class="stat"><div class="stat-label">Pending</div><div class="stat-value amber">${pending}</div></div>
     <div class="stat"><div class="stat-label">Total value</div><div class="stat-value accent">${fmt(totalVal)}</div></div>
   `;
- 
+
   const statusColors={Draft:'b-raw',Sent:'b-web',Approved:'b-finished',Declined:'b-emb',Converted:'b-digital'};
   const tb=document.getElementById('quote-tbody');
   if(!filtered.length){
@@ -2276,19 +2276,19 @@ function renderQuotes(){
     </td>
   </tr>`).join('');
 }
- 
+
 let quoteLines = [];
- 
+
 function addQuoteLine(data=null){
   quoteLineCount++;
   const id = 'ql-'+quoteLineCount;
   const container = document.getElementById('q-lines');
- 
+
   // Build garment options
   const garmentOpts = inventory.map(i=>`<option value="${i['SKU']}" data-cost="${i['Material Cost']||0}" data-name="${i['Product Name']||''}">${i['Product Name']||''} (${i['SKU']||''})</option>`).join('');
   // Build service options
   const svcOpts = services.map(s=>`<option value="${s['ID']}" data-type="${s['Service Type']||''}" data-name="${s['Service Name']||''}">${s['Service Name']||''}</option>`).join('');
- 
+
   const div = document.createElement('div');
   div.id = id;
   div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px';
@@ -2352,7 +2352,7 @@ function addQuoteLine(data=null){
   }
   calcQuote();
 }
- 
+
 function lineGarmentChange(id){
   const sel=document.getElementById(id+'-garment');
   const opt=sel.options[sel.selectedIndex];
@@ -2360,18 +2360,18 @@ function lineGarmentChange(id){
   document.getElementById(id+'-garmcost').value=cost;
   lineQtyChange(id);
 }
- 
+
 function lineQtyChange(id){
   const qty=+document.getElementById(id+'-qty').value||1;
   const mark=getMarkupForQty(qty)*100;
   document.getElementById(id+'-garmmark').value=mark.toFixed(0);
   calcQuote();
 }
- 
+
 function lineSvcChange(id){
   calcQuote();
 }
- 
+
 function calcLineItem(id){
   const qty=+document.getElementById(id+'-qty').value||1;
   const garmCost=+document.getElementById(id+'-garmcost').value||0;
@@ -2382,10 +2382,10 @@ function calcLineItem(id){
   const colours=+document.getElementById(id+'-colours').value||1;
   const sleeves=+document.getElementById(id+'-sleeves').value||0;
   const darks=+document.getElementById(id+'-darks').value||0;
- 
+
   // Garment price per piece
   const garmPricePerPc = garmCost>0 ? garmCost/(1-(garmMark/100)) + garmShip/qty : 0;
- 
+
   // Service price per piece
   let svcCostPerPc = 0;
   let svcPricePerPc = 0;
@@ -2415,11 +2415,11 @@ function calcLineItem(id){
       }
     }
   }
- 
+
   const yourCostPerPc = garmCost + svcCostPerPc;
   const pricePerPc = garmPricePerPc + svcPricePerPc;
   const lineTotal = pricePerPc * qty;
- 
+
   document.getElementById(id+'-yourcost').textContent=fmt(yourCostPerPc);
   document.getElementById(id+'-printcost').textContent=fmt(svcPricePerPc);
   document.getElementById(id+'-price').textContent=fmt(pricePerPc);

@@ -222,6 +222,8 @@ tr:hover td{background:#faf8f5}
   nav{padding:0}
   .nav-btn{padding:6px 10px;font-size:12px}
 }
+/* page-customers renders outside .app; fix with fixed positioning */
+#page-customers{position:fixed;top:56px;left:0;right:0;bottom:0;overflow-y:auto;z-index:10;background:var(--bg);padding:1.5rem;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -712,6 +714,7 @@ tr:hover td{background:#faf8f5}
     <button onclick="closeModal('sale-modal')">Cancel</button>
     <button class="primary" id="sale-save-btn" onclick="saveSale()">Save sale</button>
   </div>
+</div>
 </div>
 <!-- CUSTOMERS PAGE -->
 <div class="page" id="page-customers">
@@ -2850,7 +2853,6 @@ async function saveQuote(){
       <button id="cprof-edit-btn">Edit customer</button>
     </div>
   </div>
-</div>
 </div>
 </div>
 

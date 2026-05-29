@@ -777,6 +777,11 @@ tr:hover td{background:#faf8f5}
         <input id="jm-customer" list="jm-cust-list" placeholder="Start typing a name..." style="width:100%">
         <datalist id="jm-cust-list"></datalist>
       </div>
+      <div id="jm-quote-row">
+        <label>Linked Quote #</label>
+        <input id="jm-quote" list="jm-quote-list" placeholder="Quote # (optional)" style="width:100%">
+        <datalist id="jm-quote-list"></datalist>
+      </div>
       <div>
         <label>Item / Description</label>
         <input id="jm-item" placeholder="What is being made?" style="width:100%">
@@ -2927,7 +2932,7 @@ function jobCardHTML(j){
   const typeLabel=j.Type==='stock'?'&#128230; Stock':'&#128722; Custom';
   return '<div class="jc-item">'+escJ(j.Item||j.item||'Untitled')+'</div>'
     +'<div class="jc-meta">'+typeLabel+(qty?' &middot; x'+escJ(qty):'')+(cust?' &middot; '+cust:'')+'</div>'
-    +dueHtml;
+    +dueHtml+(j.Quote||j['Quote #']?'<div class="jc-meta">&#128196; Q# '+escJ(j.Quote||j['Quote #']||'')+'</div>':'');
 }
 function openJobModal(id){
   _editJobId=id||null;
@@ -2937,6 +2942,14 @@ function openJobModal(id){
     const o=document.createElement('option');
     o.value=c.Name||c.name||'';
     dl.appendChild(o);
+  });
+  const qdl=document.getElementById('jm-quote-list');
+  qdl.innerHTML='';
+  (quotes||[]).forEach(q=>{
+    const o=document.createElement('option');
+    o.value=q['Quote #']||q.ID||'';
+    o.label=(q.Customer?q.Customer+' – ':'')+String(q.Total||'');
+    qdl.appendChild(o);
   });
   if(id){
     const j=jobs.find(x=>(x.ID||x.id)==id);
@@ -2951,6 +2964,7 @@ function openJobModal(id){
     document.getElementById('jm-due').value=j.DueDate||j['Due Date']||'';
     document.getElementById('jm-notes').value=j.Notes||j.notes||'';
     document.getElementById('jm-design-notes').value=j.DesignNotes||j['Design Notes']||'';
+    document.getElementById('jm-quote').value=j.Quote||j['Quote #']||'';
   } else {
     document.getElementById('job-modal-title').textContent='New Job';
     document.getElementById('jm-delete-btn').style.display='none';
@@ -2958,6 +2972,7 @@ function openJobModal(id){
     document.getElementById('jm-qty').value=1;
     document.getElementById('jm-stage').value='ordered';
     document.getElementById('jm-due').value='';
+    document.getElementById('jm-quote').value='';
     document.getElementById('jm-type').value='custom';
   }
   toggleJobType();
@@ -2967,6 +2982,7 @@ function closeJobModal(){document.getElementById('job-modal').style.display='non
 function toggleJobType(){
   const isStock=document.getElementById('jm-type').value==='stock';
   document.getElementById('jm-cust-row').style.display=isStock?'none':'';
+  document.getElementById('jm-quote-row').style.display=isStock?'none':'';
 }
 async function saveJob(){
   const type=document.getElementById('jm-type').value;
@@ -2978,7 +2994,8 @@ async function saveJob(){
     Stage:document.getElementById('jm-stage').value,
     DueDate:document.getElementById('jm-due').value,
     Notes:document.getElementById('jm-notes').value,
-    DesignNotes:document.getElementById('jm-design-notes').value
+    DesignNotes:document.getElementById('jm-design-notes').value,
+    Quote:document.getElementById('jm-quote').value
   };
   if(!row.Item){toast('Item description is required','er');return;}
   try{

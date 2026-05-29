@@ -2668,7 +2668,7 @@ function addQuoteLine(data=null){
       <label>Description <input type="text" id="${id}-desc" placeholder="e.g. Embroidered hoodies" oninput="calcQuote()"></label>
       <label>Garment <div style="position:relative;display:inline-block;width:100%">
         <input type="text" id="${id}-garment-search" placeholder="Search brand, name, colour…" value="${garmentLabel}" autocomplete="off" oninput="garmentTypeahead(this,'${id}')" onblur="setTimeout(()=>{const d=document.getElementById('${id}-garment-dd');if(d)d.style.display='none'},200)" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;box-sizing:border-box">
-        <div id="${id}-garment-dd" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:600;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+        <div id="${id}-garment-dd" style="display:none;position:absolute;top:100%;left:0;min-width:420px;z-index:600;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
         <input type="hidden" id="${id}-garment" value="${data?.garment||''}">
       </div></label>
       <label>Quantity <input type="number" id="${id}-qty" min="1" value="${data?.qty||1}" oninput="lineQtyChange('${id}')"></label>
@@ -3061,7 +3061,7 @@ function garmentTypeahead(inp,id){
   dd.innerHTML=matches.length?matches.map(function(i){
     var brand=i['Tags']||'';
     var lbl=(brand?brand+' – ':'')+(i['Product Name']||'')+' · '+(i['Color']||'')+(i['Size']?' / '+i['Size']:'')+' ('+(i['SKU']||'')+')'
-;    return '<div class="gtdd-item" style="padding:5px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f0e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" data-sku="'+esc(i['SKU']||'')+'" data-cost="'+(i['Material Cost']||0)+'" title="'+esc(lbl)+'">'+esc(lbl)+'<\/div>';
+;    return '<div class="gtdd-item" style="padding:5px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f0e8;white-space:normal;line-height:1.4" data-sku="'+esc(i['SKU']||'')+'" data-cost="'+(i['Material Cost']||0)+'" title="'+esc(lbl)+'">'+esc(lbl)+'<\/div>';
   }).join(''):'<div style="padding:8px 10px;color:#999;font-size:12px">No matches<\/div>';
   dd.querySelectorAll('.gtdd-item').forEach(function(el){
     el.onmousedown=function(e){e.preventDefault();pickGarment(id,el.dataset.sku,parseFloat(el.dataset.cost||0),el.textContent);};

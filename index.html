@@ -2652,7 +2652,7 @@ function addQuoteLine(data=null){
   const container = document.getElementById('q-lines');
 
   // Build garment options
-  const garmentOpts = inventory.map(i=>`<option value="${i['SKU']}" data-cost="${i['Material Cost']||0}" data-name="${i['Product Name']||''}">${i['Product Name']||''} (${i['SKU']||''})</option>`).join('');
+  const garmentOpts = inventory.map(i=>`<option value="${i['SKU']}" data-cost="${i['Material Cost']||0}" data-name="${i['Product Name']||''}">${i['Supplier']?i['Supplier']+' – ':''}${i['Product Name']||''} · ${i['Color']||''}${i['Size']?' / '+i['Size']:''} (${i['SKU']||''})</option>`).join('');
   // Build service options
   const svcOpts = services.map(s=>`<option value="${s['ID']}" data-type="${s['Service Type']||''}" data-name="${s['Service Name']||''}">${s['Service Name']||''}</option>`).join('');
 

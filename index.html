@@ -1374,7 +1374,7 @@ function openSaleModal(id=null){
   document.getElementById('sale-modal-title').textContent=id?'Edit sale':'Record sale';
   const prodSel=document.getElementById('sl-product');
   prodSel.innerHTML='<option value="">— select product —</option>'+inventory.map(i=>`<option value="${i['Product Name']||''}">${i['Product Name']||''} (${i['SKU']||''})</option>`).join('');
-  const allCusts=new Set([...sales.map(s=>s['Customer']),...quotes.map(q=>q['Customer'])].filter(Boolean));
+  const allCusts=new Set([...customers.map(c=>c.name),...sales.map(s=>s['Customer']),...quotes.map(q=>q['Customer'])].filter(Boolean));
   document.getElementById('sl-customer-list').innerHTML=[...allCusts].map(c=>`<option value="${c.replace(/"/g,'&quot;')}">`).join('');
   document.getElementById('quick-prod-form').style.display='none';
   if(!id){
@@ -1408,7 +1408,7 @@ function toggleQuickProd(){
   const f=document.getElementById('quick-prod-form');
   const showing=f.style.display!=='none';
   f.style.display=showing?'none':'block';
-  if(!showing)document.getElementById('qp-name').focus();
+  if(!showing){f.scrollIntoView({behavior:'smooth',block:'nearest'});document.getElementById('qp-name').focus();}
 }
 
 async function saveQuickProd(){

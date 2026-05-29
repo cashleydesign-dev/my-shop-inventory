@@ -538,6 +538,14 @@ tr:hover td{background:#faf8f5}
       <div class="job-cards" id="cards-ordered"></div>
     </div>
     <div class="job-col">
+      <div class="job-col-header">&#128196; Quoting</div>
+      <div class="job-cards" id="cards-quoting"></div>
+    </div>
+    <div class="job-col">
+      <div class="job-col-header">&#9989; Quote Approved</div>
+      <div class="job-cards" id="cards-quote-approved"></div>
+    </div>
+    <div class="job-col">
       <div class="job-col-header">🎨 Design / Proof</div>
       <div class="job-cards" id="cards-design"></div>
     </div>
@@ -794,6 +802,8 @@ tr:hover td{background:#faf8f5}
         <label>Stage</label>
         <select id="jm-stage" style="width:100%">
           <option value="ordered">Order Received</option>
+          <option value="quoting">&#128196; Quoting</option>
+          <option value="quote-approved">&#9989; Quote Approved</option>
           <option value="design">Design / Proof</option>
           <option value="production">In Production</option>
           <option value="ready">Ready / Delivered</option>
@@ -2914,7 +2924,7 @@ function renderJobs(){
   ['cards-ordered','cards-design','cards-production','cards-ready'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML='';
   });
-  const colMap={ordered:'cards-ordered',design:'cards-design',production:'cards-production',ready:'cards-ready'};
+  const colMap={ordered:'cards-ordered','quoting':'cards-quoting','quote-approved':'cards-quote-approved',design:'cards-design',production:'cards-production',ready:'cards-ready'};
   (jobs||[]).forEach(j=>{
     const stg=j.Stage||j.stage||'ordered';
     const col=document.getElementById(colMap[stg]||'cards-ordered');

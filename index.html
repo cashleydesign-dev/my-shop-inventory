@@ -2651,8 +2651,8 @@ function addQuoteLine(data=null){
   const id = 'ql-'+quoteLineCount;
   const container = document.getElementById('q-lines');
 
-  // Build garment options
-  const garmentOpts = inventory.map(i=>`<option value="${i['SKU']}" data-cost="${i['Material Cost']||0}" data-name="${i['Product Name']||''}">${i['Tags']?i['Tags']+' – ':''}${i['Product Name']||''} · ${i['Color']||''}${i['Size']?' / '+i['Size']:''} (${i['SKU']||''})</option>`).join('');
+  // Precompute garment label for edit mode
+  const garmentLabel=(()=>{if(!data?.garment)return '';const _i=inventory.find(i=>i['SKU']===data.garment);if(!_i)return (data.garment||'').replace(/"/g,'&quot;');const lbl=(_i['Tags']?_i['Tags']+' – ':'')+(_i['Product Name']||'')+' · '+(_i['Color']||'')+(_i['Size']?' / '+_i['Size']:'')+' ('+(_i['SKU']||'')+')';return lbl.replace(/"/g,'&quot;').replace(/</g,'&lt;');})();
   // Build service options
   const svcOpts = services.map(s=>`<option value="${s['ID']}" data-type="${s['Service Type']||''}" data-name="${s['Service Name']||''}">${s['Service Name']||''}</option>`).join('');
 
@@ -2666,9 +2666,11 @@ function addQuoteLine(data=null){
     </div>
     <div class="fg">
       <label>Description <input type="text" id="${id}-desc" placeholder="e.g. Embroidered hoodies" oninput="calcQuote()"></label>
-      <label>Garment (from inventory) <select id="${id}-garment" onchange="lineGarmentChange('${id}')">
-        <option value="">— none / already included —</option>${garmentOpts}
-      </select></label>
+      <label>Garment <div style="position:relative;display:inline-block;width:100%">
+        <input type="text" id="${id}-garment-search" placeholder="Search brand, name, colour…" value="${garmentLabel}" autocomplete="off" oninput="garmentTypeahead(this,'${id}')" onblur="setTimeout(()=>{const d=document.getElementById('${id}-garment-dd');if(d)d.style.display='none'},200)" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;box-sizing:border-box">
+        <div id="${id}-garment-dd" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:600;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+        <input type="hidden" id="${id}-garment" value="${data?.garment||''}">
+      </div></label>
       <label>Quantity <input type="number" id="${id}-qty" min="1" value="${data?.qty||1}" oninput="lineQtyChange('${id}')"></label>
       <label>Garment cost/piece ($) <input type="number" id="${id}-garmcost" min="0" step="0.01" value="${data?.garmcost||0}" oninput="calcQuote()"></label>
       <label>Markup % on garment <input type="number" id="${id}-garmmark" min="0" max="100" step="1" value="${data?.garmmark||50}" oninput="calcQuote()"></label>
@@ -3048,6 +3050,33 @@ async function deleteJob(){
     toast('Job deleted','ok');
   }catch(e){toast('Error deleting job','er');}
 }
+
+function garmentTypeahead(inp,id){
+  var q=(inp.value||'').toLowerCase().trim();
+  var dd=document.getElementById(id+'-garment-dd');
+  if(!dd)return;
+  if(!q){dd.style.display='none';return;}
+  var esc=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var matches=inventory.filter(function(i){return [(i['Tags']||''),(i['Product Name']||''),(i['Color']||''),(i['SKU']||'')].some(function(v){return v.toLowerCase().includes(q);});}).slice(0,50);
+  dd.innerHTML=matches.length?matches.map(function(i){
+    var brand=i['Tags']||'';
+    var lbl=(brand?brand+' – ':'')+(i['Product Name']||'')+' · '+(i['Color']||'')+(i['Size']?' / '+i['Size']:'')+' ('+(i['SKU']||'')+')'
+;    return '<div class="gtdd-item" style="padding:5px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f0e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" data-sku="'+esc(i['SKU']||'')+'" data-cost="'+(i['Material Cost']||0)+'" title="'+esc(lbl)+'">'+esc(lbl)+'<\/div>';
+  }).join(''):'<div style="padding:8px 10px;color:#999;font-size:12px">No matches<\/div>';
+  dd.querySelectorAll('.gtdd-item').forEach(function(el){
+    el.onmousedown=function(e){e.preventDefault();pickGarment(id,el.dataset.sku,parseFloat(el.dataset.cost||0),el.textContent);};
+  });
+  dd.style.display='block';
+}
+function pickGarment(id,sku,cost,label){
+  var g=document.getElementById(id+'-garment');
+  var gc=document.getElementById(id+'-garmcost');
+  var s=document.getElementById(id+'-garment-search');
+  var dd=document.getElementById(id+'-garment-dd');
+  if(g)g.value=sku;if(gc)gc.value=cost;if(s)s.value=label;if(dd)dd.style.display='none';
+  lineQtyChange(id);
+}
+document.addEventListener('click',function(e){if(!e.target.closest||!e.target.closest('[id$="-garment-search"]')){document.querySelectorAll('[id$="-garment-dd"]').forEach(function(d){d.style.display='none';});}});
 </script>
 
 <!-- CUSTOMER MODAL -->

@@ -799,6 +799,15 @@ tr:hover td{background:#faf8f5}
           <option value="ready">Ready / Delivered</option>
         </select>
       </div>
+      <div>
+        <label>Quote Status</label>
+        <select id="jm-qstatus" style="width:100%">
+          <option value="none">&#9898; Not Quoted</option>
+          <option value="sent">&#128993; Quote Sent</option>
+          <option value="approved">&#10003; Quote Approved</option>
+          <option value="declined">&#10007; Quote Declined</option>
+        </select>
+      </div>
       <div><label>Notes</label><textarea id="jm-notes" rows="2" placeholder="General notes..." style="width:100%"></textarea></div>
       <div><label>Design Notes</label><textarea id="jm-design-notes" rows="2" placeholder="Colors, sizes, artwork details..." style="width:100%"></textarea></div>
     </div>
@@ -2932,6 +2941,7 @@ function jobCardHTML(j){
   const typeLabel=j.Type==='stock'?'&#128230; Stock':'&#128722; Custom';
   return '<div class="jc-item">'+escJ(j.Item||j.item||'Untitled')+'</div>'
     +'<div class="jc-meta">'+typeLabel+(qty?' &middot; x'+escJ(qty):'')+(cust?' &middot; '+cust:'')+'</div>'
+    +(j.QuoteStatus==='sent'?'<div class="jc-meta" style="color:#b7791f">&#128993; Quote Sent</div>':j.QuoteStatus==='approved'?'<div class="jc-meta" style="color:#276749">&#10003; Approved</div>':j.QuoteStatus==='declined'?'<div class="jc-meta" style="color:#c53030">&#10007; Declined</div>':'')
     +dueHtml+(j.Quote||j['Quote #']?'<div class="jc-meta">&#128196; Q# '+escJ(j.Quote||j['Quote #']||'')+'</div>':'');
 }
 function openJobModal(id){
@@ -2965,6 +2975,7 @@ function openJobModal(id){
     document.getElementById('jm-notes').value=j.Notes||j.notes||'';
     document.getElementById('jm-design-notes').value=j.DesignNotes||j['Design Notes']||'';
     document.getElementById('jm-quote').value=j.Quote||j['Quote #']||'';
+    document.getElementById('jm-qstatus').value=j.QuoteStatus||'none';
   } else {
     document.getElementById('job-modal-title').textContent='New Job';
     document.getElementById('jm-delete-btn').style.display='none';
@@ -2973,6 +2984,7 @@ function openJobModal(id){
     document.getElementById('jm-stage').value='ordered';
     document.getElementById('jm-due').value='';
     document.getElementById('jm-quote').value='';
+    document.getElementById('jm-qstatus').value='none';
     document.getElementById('jm-type').value='custom';
   }
   toggleJobType();
@@ -2995,7 +3007,8 @@ async function saveJob(){
     DueDate:document.getElementById('jm-due').value,
     Notes:document.getElementById('jm-notes').value,
     DesignNotes:document.getElementById('jm-design-notes').value,
-    Quote:document.getElementById('jm-quote').value
+    Quote:document.getElementById('jm-quote').value,
+    QuoteStatus:document.getElementById('jm-qstatus').value
   };
   if(!row.Item){toast('Item description is required','er');return;}
   try{

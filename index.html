@@ -3084,12 +3084,6 @@ document.addEventListener('click',function(e){if(!e.target.closest||!e.target.cl
 <div class="modal">
   <div class="modal-hd"><h2 id="cust-modal-title">Add customer</h2><button class="ghost" onclick="closeModal('cust-modal')">✕</button></div>
   <div class="modal-bd">
-    <div class="sec-label">Contact details</div>
-    <div class="fg">
-      <label>Full name* <input type="text" id="c-name" placeholder="Jane Smith"></label>
-      <label>Email <input type="email" id="c-email" placeholder="jane@example.com"></label>
-      <label>Phone <input type="tel" id="c-phone" placeholder="+1 (604) 555-0100"></label>
-    </div>
     <div class="sec-label">Business details</div>
     <div class="fg">
       <label>Company <input type="text" id="c-company" placeholder="Acme Corp (optional)"></label>
@@ -3099,7 +3093,13 @@ document.addEventListener('click',function(e){if(!e.target.closest||!e.target.cl
     <div class="fg">
       <label>Tax exempt? <select id="c-taxexempt"><option value="No">No — taxable</option><option value="Yes">Yes — fully exempt</option><option value="GST only">GST only</option></select></label>
       <label style="grid-column:1/-1">Notes <textarea id="c-notes" rows="2" placeholder="Any notes about this customer…" style="width:100%;resize:vertical;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font:inherit"></textarea></label>
+    </div><div class="sec-label">Contact details</div>
+    <div class="fg">
+      <label>Full name* <input type="text" id="c-name" placeholder="Jane Smith"></label>
+      <label>Email <input type="email" id="c-email" placeholder="jane@example.com"></label>
+      <label>Phone <input type="tel" id="c-phone" placeholder="+1 (604) 555-0100"></label>
     </div>
+    
   </div>
   <div class="modal-ft">
     <button onclick="closeModal('cust-modal')">Cancel</button>

@@ -533,6 +533,8 @@ async function loadAll(){
   }
 }
 function renderAll(){
+  if(inventory.length){const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);invSkuN=Math.max(...nums)+1;}
+  if(quotes.length){const nums=quotes.map(q=>parseInt((q['Quote #']||'').split('-')[1])||0);quoteN=Math.max(...nums)+1;}
   renderDashboard();renderInv();renderSuppliers();renderServices();renderQuotes();
   renderSales();renderExp();renderCustomers();renderJobs();
   populateSupDropdowns();populateMonthFilters();
@@ -1487,22 +1489,14 @@ function addQuoteLine(data=null){
         <button type="button" class="sm primary" onclick="saveLineQuickProd('${id}')">Add &amp; select</button>
       </div>
     </div>
-    <div class="sec-label" style="margin-top:14px">⚙️ Service / Decoration</div>
-    <div class="fg">
-      <label>Service
-        <select id="${id}-svc" onchange="lineSvcChange('${id}')">
-          <option value="">— no decoration —</option>${svcOpts}
-        </select>
-        <span onclick="toggleLineQuickSvc('${id}')" style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:block">＋ Add new service</span>
-      </label>
-      <label>Stitch count (embroidery) <input type="number" id="${id}-stitches" min="0" value="${data?.stitches||0}" oninput="calcQuote()"></label>
-      <label>Colours (screen print) <input type="number" id="${id}-colours" min="1" max="8" value="${data?.colours||1}" oninput="calcQuote()"></label>
-      <label>Sleeves? <select id="${id}-sleeves" onchange="calcQuote()"><option value="0">No sleeves</option><option value="1">Add sleeves (+$3/pc)</option></select></label>
-      <label>White on darks? <select id="${id}-darks" onchange="calcQuote()"><option value="0">No</option><option value="1">Yes (+1 colour)</option></select></label>
-      <label>Decoration shipping ($) <input type="number" id="${id}-decsship" min="0" step="0.01" value="${data?.decsship||0}" oninput="calcQuote()"></label>
+    <div class="sec-label" style="margin-top:14px">⚙️ Service / Decorations</div>
+    <div id="${id}-decs"></div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center">
+      <button type="button" class="sm" onclick="addDecoration('${id}')">+ Add decoration</button>
+      <span onclick="toggleLineQuickSvc('${id}')" style="font-size:11px;color:var(--accent);cursor:pointer">＋ New service to library</span>
     </div>
     <div id="${id}-quick-svc" style="display:none;border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-top:8px;background:var(--surface2)">
-      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)">Quick-add service</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)">Quick-add service to library</div>
       <div class="fg">
         <label>Service name <input type="text" id="${id}-qs-name" placeholder="e.g. DTF Print 4×4"></label>
         <label>Base rate ($) <input type="number" id="${id}-qs-rate" min="0" step="0.01" placeholder="0.00"></label>
@@ -1531,44 +1525,59 @@ function addQuoteLine(data=null){
     if(data.desc)document.getElementById(id+'-desc').value=data.desc;
     if(data.tax)document.getElementById(id+'-tax').value=data.tax;
     if(data.garment)document.getElementById(id+'-garment').value=data.garment;
-    if(data.svc)document.getElementById(id+'-svc').value=data.svc;
-    if(data.sleeves)document.getElementById(id+'-sleeves').value=data.sleeves;
-    if(data.darks)document.getElementById(id+'-darks').value=data.darks;
-    if(data.colours)document.getElementById(id+'-colours').value=data.colours;
-    if(data.stitches)document.getElementById(id+'-stitches').value=data.stitches;
+    // Load decorations — support both new array format and legacy single-service format
+    if(data.decorations&&data.decorations.length){
+      data.decorations.forEach(dec=>addDecoration(id,dec));
+    } else if(data.svc){
+      addDecoration(id,{svc:data.svc,stitches:data.stitches||0,colours:data.colours||1,sleeves:data.sleeves||0,darks:data.darks||0,decsship:data.decsship||0});
+    } else {
+      addDecoration(id);
+    }
+  } else {
+    addDecoration(id);
   }
   calcQuote();
 }
 function lineGarmentChange(id){const sel=document.getElementById(id+'-garment');const opt=sel.options[sel.selectedIndex];const cost=opt?.dataset?.cost||0;document.getElementById(id+'-garmcost').value=cost;lineQtyChange(id);}
 function lineQtyChange(id){const qty=+document.getElementById(id+'-qty').value||1;const mark=getMarkupForQty(qty)*100;document.getElementById(id+'-garmmark').value=mark.toFixed(0);calcQuote();}
 function lineSvcChange(id){calcQuote();}
+function decSvcChange(did){calcQuote();}
+function calcDecoration(did,qty){
+  // Returns {svcCost, svcPrice} per piece for one decoration row
+  const svcSel=document.getElementById(did+'-svc');if(!svcSel||!svcSel.value)return{svcCost:0,svcPrice:0};
+  const svcId=svcSel.value;const svc=services.find(s=>s['ID']===svcId);if(!svc)return{svcCost:0,svcPrice:0};
+  const type=svc['Service Type'];
+  const stitches=+document.getElementById(did+'-stitches').value||0;
+  const colours=+document.getElementById(did+'-colours').value||1;
+  const sleeves=+document.getElementById(did+'-sleeves').value||0;
+  const darks=+document.getElementById(did+'-darks').value||0;
+  const decShip=+document.getElementById(did+'-decsship').value||0;
+  let svcCost=0,svcPrice=0;
+  if(type==='embroidery'){const rate=+svc['Emb Rate']||1.50;svcPrice=Math.max((stitches/1000)*rate,+svc['Emb Min Charge']||0);svcCost=svcPrice;}
+  else if(type==='screen'){const effectiveCols=colours+darks;const gridPrice=getPHPrice(qty,effectiveCols);const setupPerPc=(+svc['Screen Setup']||25)*effectiveCols/qty;const sleevePerPc=sleeves*(+svc['Screen Sleeve']||3);const markup=+svc['Screen Markup']||2;svcCost=gridPrice+setupPerPc+sleevePerPc+decShip/qty;svcPrice=svcCost*markup;}
+  else{const rate=+svc['Base Rate']||0;const markup=+svc['Markup']||2;svcCost=rate+decShip/qty;svcPrice=svcCost*markup;}
+  return{svcCost,svcPrice};
+}
 function calcLineItem(id){
   const qty=+document.getElementById(id+'-qty').value||1;
   const garmCost=+document.getElementById(id+'-garmcost').value||0;
   const garmMark=+document.getElementById(id+'-garmmark').value||50;
   const garmShip=+document.getElementById(id+'-garmsship').value||0;
-  const decShip=+document.getElementById(id+'-decsship').value||0;
-  const stitches=+document.getElementById(id+'-stitches').value||0;
-  const colours=+document.getElementById(id+'-colours').value||1;
-  const sleeves=+document.getElementById(id+'-sleeves').value||0;
-  const darks=+document.getElementById(id+'-darks').value||0;
   const garmPricePerPc=garmCost>0?garmCost/(1-(garmMark/100))+garmShip/qty:0;
-  let svcCostPerPc=0,svcPricePerPc=0;
-  const svcSel=document.getElementById(id+'-svc');const svcId=svcSel.value;
-  if(svcId){
-    const svc=services.find(s=>s['ID']===svcId);
-    if(svc){
-      const type=svc['Service Type'];
-      if(type==='embroidery'){const rate=+svc['Emb Rate']||1.50;svcPricePerPc=Math.max((stitches/1000)*rate,+svc['Emb Min Charge']||0);svcCostPerPc=svcPricePerPc;}
-      else if(type==='screen'){const effectiveCols=colours+darks;const gridPrice=getPHPrice(qty,effectiveCols);const setupPerPc=(+svc['Screen Setup']||25)*effectiveCols/qty;const sleevePerPc=sleeves*(+svc['Screen Sleeve']||3);const markup=+svc['Screen Markup']||2;svcCostPerPc=gridPrice+setupPerPc+sleevePerPc+decShip/qty;svcPricePerPc=svcCostPerPc*markup;}
-      else{const rate=+svc['Base Rate']||0;const markup=+svc['Markup']||2;svcCostPerPc=rate+decShip/qty;svcPricePerPc=svcCostPerPc*markup;}
-    }
+  let totalSvcCost=0,totalSvcPrice=0;
+  const decsContainer=document.getElementById(id+'-decs');
+  if(decsContainer){
+    [...decsContainer.children].forEach(decEl=>{
+      if(!decEl.id)return;
+      const{svcCost,svcPrice}=calcDecoration(decEl.id,qty);
+      totalSvcCost+=svcCost;totalSvcPrice+=svcPrice;
+    });
   }
-  const yourCostPerPc=garmCost+svcCostPerPc;
-  const pricePerPc=garmPricePerPc+svcPricePerPc;
+  const yourCostPerPc=garmCost+totalSvcCost;
+  const pricePerPc=garmPricePerPc+totalSvcPrice;
   const lineTotal=pricePerPc*qty;
   document.getElementById(id+'-yourcost').textContent=fmt(yourCostPerPc);
-  document.getElementById(id+'-printcost').textContent=fmt(svcPricePerPc);
+  document.getElementById(id+'-printcost').textContent=fmt(totalSvcPrice);
   document.getElementById(id+'-price').textContent=fmt(pricePerPc);
   document.getElementById(id+'-linetotal').textContent=fmt(lineTotal);
   const tax=document.getElementById(id+'-tax').value;
@@ -1629,7 +1638,15 @@ async function saveQuote(){
   const customer=document.getElementById('q-customer').value.trim();if(!customer){alert('Please enter a customer name');return}
   const btn=document.getElementById('quote-save-btn');btn.textContent='Saving…';btn.disabled=true;
   const lineEls=[...document.getElementById('q-lines').children].filter(el=>el.id);
-  const linesData=lineEls.map(el=>{const id=el.id;return{desc:document.getElementById(id+'-desc').value,garment:document.getElementById(id+'-garment').value,qty:document.getElementById(id+'-qty').value,garmcost:document.getElementById(id+'-garmcost').value,garmmark:document.getElementById(id+'-garmmark').value,garmsship:document.getElementById(id+'-garmsship').value,svc:document.getElementById(id+'-svc').value,stitches:document.getElementById(id+'-stitches').value,colours:document.getElementById(id+'-colours').value,sleeves:document.getElementById(id+'-sleeves').value,darks:document.getElementById(id+'-darks').value,decsship:document.getElementById(id+'-decsship').value,tax:document.getElementById(id+'-tax').value};});
+  const linesData=lineEls.map(el=>{
+    const id=el.id;
+    const decsContainer=document.getElementById(id+'-decs');
+    const decorations=decsContainer?[...decsContainer.children].filter(d=>d.id).map(d=>{
+      const did=d.id;
+      return{svc:(document.getElementById(did+'-svc')||{}).value||'',stitches:(document.getElementById(did+'-stitches')||{}).value||0,colours:(document.getElementById(did+'-colours')||{}).value||1,sleeves:(document.getElementById(did+'-sleeves')||{}).value||0,darks:(document.getElementById(did+'-darks')||{}).value||0,decsship:(document.getElementById(did+'-decsship')||{}).value||0};
+    }):[];
+    return{desc:document.getElementById(id+'-desc').value,garment:document.getElementById(id+'-garment').value,qty:document.getElementById(id+'-qty').value,garmcost:document.getElementById(id+'-garmcost').value,garmmark:document.getElementById(id+'-garmmark').value,garmsship:document.getElementById(id+'-garmsship').value,tax:document.getElementById(id+'-tax').value,decorations};
+  });
   const subtotal=parseFloat((document.getElementById('q-subtotal').textContent||'').replace('$',''))||0;
   const gst=parseFloat((document.getElementById('q-gst').textContent||'').replace('$',''))||0;
   const pst=parseFloat((document.getElementById('q-pst').textContent||'').replace('$',''))||0;
@@ -1704,6 +1721,46 @@ async function deleteJob(){
   try{await apiCall({action:'deleteRow',sheet:'Jobs',id:_editJobId});jobs=jobs.filter(j=>(j.ID||j.id)!=_editJobId);renderJobs();closeJobModal();toast('Job deleted','ok');}
   catch(e){toast('Error deleting job','err');}
 }
+let lineDecCount={};
+function addDecoration(lineId,data=null){
+  if(!lineDecCount[lineId])lineDecCount[lineId]=0;
+  lineDecCount[lineId]++;
+  const did=lineId+'-dec-'+lineDecCount[lineId];
+  const container=document.getElementById(lineId+'-decs');
+  if(!container)return;
+  const svcOpts=services.map(s=>`<option value="${s['ID']}">${s['Service Name']||''}</option>`).join('');
+  const decNum=lineDecCount[lineId];
+  const row=document.createElement('div');
+  row.id=did;
+  row.style.cssText='background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;margin-bottom:6px';
+  row.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Decoration ${decNum}</span>
+      <button type="button" class="sm ghost danger" onclick="document.getElementById('${did}').remove();calcQuote()">Remove</button>
+    </div>
+    <div class="fg">
+      <label>Service
+        <select id="${did}-svc" onchange="decSvcChange('${did}')">
+          <option value="">— none —</option>${svcOpts}
+        </select>
+      </label>
+      <label>Stitch count <input type="number" id="${did}-stitches" min="0" value="0" placeholder="e.g. 5000" oninput="calcQuote()"></label>
+      <label>Colours (screen) <input type="number" id="${did}-colours" min="1" max="8" value="1" oninput="calcQuote()"></label>
+      <label>Sleeves? <select id="${did}-sleeves" onchange="calcQuote()"><option value="0">No sleeves</option><option value="1">Add sleeves (+$3/pc)</option></select></label>
+      <label>White on darks? <select id="${did}-darks" onchange="calcQuote()"><option value="0">No</option><option value="1">Yes (+1 col)</option></select></label>
+      <label>Dec. shipping ($) <input type="number" id="${did}-decsship" min="0" step="0.01" value="0" oninput="calcQuote()"></label>
+    </div>`;
+  container.appendChild(row);
+  if(data){
+    if(data.svc)document.getElementById(did+'-svc').value=data.svc;
+    if(data.stitches)document.getElementById(did+'-stitches').value=data.stitches;
+    if(data.colours)document.getElementById(did+'-colours').value=data.colours;
+    if(data.sleeves)document.getElementById(did+'-sleeves').value=data.sleeves;
+    if(data.darks)document.getElementById(did+'-darks').value=data.darks;
+    if(data.decsship)document.getElementById(did+'-decsship').value=data.decsship;
+  }
+  calcQuote();
+}
 function toggleLineQuickProd(id){
   const f=document.getElementById(id+'-quick-prod');if(f)f.style.display=f.style.display==='none'?'block':'none';
 }
@@ -1737,7 +1794,12 @@ async function saveLineQuickSvc(id){
   try{
     await apiCall({action:'saveRow',sheet:'Services',keyCol:'ID',row});services.push(row);
     const svcSel=document.getElementById(id+'-svc');
-    if(svcSel){svcSel.innerHTML='<option value="">— no decoration —</option>'+services.map(s=>`<option value="${s['ID']}">${s['Service Name']||''}</option>`).join('');svcSel.value=svcId;}
+    // Refresh all decoration service dropdowns in this line
+    const decsC=document.getElementById(id+'-decs');
+    if(decsC){[...decsC.children].filter(d=>d.id).forEach(d=>{const sel=document.getElementById(d.id+'-svc');if(sel){const cur=sel.value;sel.innerHTML='<option value="">— none —</option>'+services.map(s=>`<option value="${s['ID']}">${s['Service Name']||''}</option>`).join('');sel.value=cur;}});}
+    // Auto-select the new service in the last decoration (if any)
+    const lastDec=decsC&&decsC.lastElementChild;const lastSel=lastDec&&document.getElementById(lastDec.id+'-svc');
+    if(lastSel&&!lastSel.value)lastSel.value=svcId;
     document.getElementById(id+'-quick-svc').style.display='none';
     document.getElementById(id+'-qs-name').value='';document.getElementById(id+'-qs-rate').value='';
     calcQuote();toast('"'+name+'" added to services','ok');

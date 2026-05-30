@@ -154,21 +154,22 @@ tr:hover td{background:#faf8f5}
   <div class="stats">
     <div class="stat"><div class="stat-label">Total products</div><div class="stat-value accent" id="d-products">—</div></div>
     <div class="stat"><div class="stat-label">Finished stock</div><div class="stat-value" id="d-finished">—</div></div>
-    <div class="stat"><div class="stat-label">Raw materials</div><div class="stat-value amber" id="d-raw">—</div></div>
     <div class="stat"><div class="stat-label">Low stock alerts</div><div class="stat-value red" id="d-low">—</div></div>
     <div class="stat"><div class="stat-label">Sales this month</div><div class="stat-value green" id="d-sales">—</div></div>
     <div class="stat"><div class="stat-label">Expenses this month</div><div class="stat-value red" id="d-exp">—</div></div>
     <div class="stat"><div class="stat-label">Net this month</div><div class="stat-value" id="d-net">—</div></div>
-    <div class="stat"><div class="stat-label">Suppliers</div><div class="stat-value" id="d-sups">—</div></div>
+    <div class="stat"><div class="stat-label">Open quotes</div><div class="stat-value amber" id="d-quotes">—</div></div>
+    <div class="stat"><div class="stat-label">Active jobs</div><div class="stat-value" style="color:var(--purple)" id="d-jobs">—</div></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:0.5rem">
     <div class="card" style="padding:1.25rem"><div style="font-weight:600;margin-bottom:10px;font-size:13px">Recent sales</div><div id="d-recent-sales" style="font-size:13px;color:var(--text2)">Loading…</div></div>
-    <div class="card" style="padding:1.25rem"><div style="font-weight:600;margin-bottom:10px;font-size:13px">Low stock items</div><div id="d-low-items" style="font-size:13px;color:var(--text2)">Loading…</div></div>
+    <div class="card" style="padding:1.25rem"><div style="font-weight:600;margin-bottom:10px;font-size:13px">Open quotes</div><div id="d-open-quotes" style="font-size:13px;color:var(--text2)">Loading…</div></div>
   </div>
 </div>
 <!-- INVENTORY -->
 <div class="page" id="page-inventory">
   <div class="sec-hd"><h2>Inventory</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" onclick="openInvModal()">+ Add product</button></div></div>
+  <div id="inv-low-stock-banner"></div>
   <div class="stats" id="inv-stats"></div>
   <div class="toolbar">
     <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="inv-search" placeholder="Search name, SKU, tags…" oninput="renderInv()"></div>
@@ -545,33 +546,36 @@ function goTo(page,btn){
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
 }
+function isOwnItem(i){return!(i['Notes']||'').includes('S&S Style');}
 function renderDashboard(){
   const finished=inventory.filter(i=>i['Stage']==='Finished').reduce((s,i)=>s+(Number(i['Qty'])||0),0);
-  const raw=inventory.filter(i=>i['Stage']==='Raw').reduce((s,i)=>s+(Number(i['Qty'])||0),0);
-  const low=inventory.filter(i=>i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold'])).length;
+  // Low stock: only your own items (not S&S catalog), where qty <= reorder threshold
+  const lowItems=inventory.filter(i=>isOwnItem(i)&&i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
   const thisMonth=new Date().toISOString().slice(0,7);
   const monthlySales=sales.filter(s=>(s['Date']||'').startsWith(thisMonth));
   const monthlyExp=expenses.filter(e=>(e['Date']||'').startsWith(thisMonth));
   const salesTotal=monthlySales.reduce((s,i)=>s+(Number(i['Net Income'])||0),0);
   const expTotal=monthlyExp.reduce((s,i)=>s+(Number(i['Total Paid'])||0),0);
   const net=salesTotal-expTotal;
+  const openQuotes=quotes.filter(q=>q['Status']==='Draft'||q['Status']==='Sent').length;
+  const activeJobs=jobs.filter(j=>{const s=j.Stage||j.stage||'';return s!=='ready';}).length;
   document.getElementById('d-products').textContent=inventory.length;
   document.getElementById('d-finished').textContent=finished;
-  document.getElementById('d-raw').textContent=raw;
-  document.getElementById('d-low').textContent=low;
+  document.getElementById('d-low').textContent=lowItems.length;
   document.getElementById('d-sales').textContent=fmt(salesTotal);
   document.getElementById('d-exp').textContent=fmt(expTotal);
   const nel=document.getElementById('d-net');
   nel.textContent=fmt(net);nel.className='stat-value '+(net>=0?'green':'red');
-  document.getElementById('d-sups').textContent=suppliers.length;
+  document.getElementById('d-quotes').textContent=openQuotes;
+  document.getElementById('d-jobs').textContent=activeJobs;
   const recentSales=sales.slice(-5).reverse();
   document.getElementById('d-recent-sales').innerHTML=recentSales.length?
     recentSales.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${s['Product']||'—'} <span style="color:var(--text3);font-size:11px">${s['Platform']||''}</span></span><span style="font-weight:600;color:var(--green)">${fmt(s['Net Income'])}</span></div>`).join('')
     :'<span style="color:var(--text3)">No sales recorded yet</span>';
-  const lowItems=inventory.filter(i=>i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
-  document.getElementById('d-low-items').innerHTML=lowItems.length?
-    lowItems.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${i['Product Name']||'—'}</span><span style="color:var(--red);font-weight:600">${i['Qty']} left</span></div>`).join('')
-    :'<span style="color:var(--green)">✓ All stock levels OK</span>';
+  const openQuotesList=quotes.filter(q=>q['Status']==='Draft'||q['Status']==='Sent').slice(-5).reverse();
+  document.getElementById('d-open-quotes').innerHTML=openQuotesList.length?
+    openQuotesList.map(q=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:500">${q['Quote #']||'—'} <span style="color:var(--text3);font-size:11px">${q['Customer']||''}</span></span><span style="display:flex;align-items:center;gap:8px"><span class="badge ${q['Status']==='Sent'?'b-web':'b-raw'}">${q['Status']}</span><span style="font-weight:600">${fmt(q['Total'])}</span></span></div>`).join('')
+    :'<span style="color:var(--text3)">No open quotes</span>';
 }
 function renderInv(){
   const q=document.getElementById('inv-search').value.toLowerCase();
@@ -603,6 +607,23 @@ function renderInv(){
     <div class="stat"><div class="stat-label">Work in progress</div><div class="stat-value" style="color:var(--purple)">${wip}</div></div>
     <div class="stat"><div class="stat-label">Digital products</div><div class="stat-value" style="color:var(--teal)">${digital}</div></div>
   `;
+  // Low stock banner — own items only
+  const lowOwn=inventory.filter(i=>isOwnItem(i)&&i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
+  const banner=document.getElementById('inv-low-stock-banner');
+  if(banner){
+    if(lowOwn.length){
+      const isOpen=banner.dataset.open==='true';
+      banner.innerHTML=`<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:10px 16px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span style="font-weight:600;color:var(--red);font-size:13px">⚠️ ${lowOwn.length} item${lowOwn.length>1?'s':''} low on stock</span>
+        <span style="font-size:11px;color:var(--red)">click to expand</span>
+      </div>
+      <div style="display:none;background:var(--red-bg);border:1px solid var(--red);border-top:none;border-radius:0 0 var(--r) var(--r);padding:8px 16px;margin-bottom:12px">
+        ${lowOwn.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(161,43,43,0.15);font-size:13px"><span>${i['Product Name']||'—'} <span style="color:var(--text3);font-size:11px">${i['SKU']||''}</span></span><span style="color:var(--red);font-weight:600">${i['Qty']} left (threshold: ${i['Reorder Threshold']})</span></div>`).join('')}
+      </div>`;
+    } else {
+      banner.innerHTML='';
+    }
+  }
   const tb=document.getElementById('inv-tbody');
   if(!filtered.length){tb.innerHTML=`<tr><td colspan="14"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">${inventory.length?'No matches':'No products yet'}</div></div></td></tr>`;return;}
   tb.innerHTML=filtered.map(i=>{

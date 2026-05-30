@@ -550,7 +550,7 @@ function isOwnItem(i){return!(i['Notes']||'').includes('S&S Style');}
 function renderDashboard(){
   const finished=inventory.filter(i=>i['Stage']==='Finished').reduce((s,i)=>s+(Number(i['Qty'])||0),0);
   // Low stock: only your own items (not S&S catalog), where qty <= reorder threshold
-  const lowItems=inventory.filter(i=>isOwnItem(i)&&i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
+  const lowItems=inventory.filter(i=>isOwnItem(i)&&Number(i['Qty'])<5);
   const thisMonth=new Date().toISOString().slice(0,7);
   const monthlySales=sales.filter(s=>(s['Date']||'').startsWith(thisMonth));
   const monthlyExp=expenses.filter(e=>(e['Date']||'').startsWith(thisMonth));
@@ -608,7 +608,7 @@ function renderInv(){
     <div class="stat"><div class="stat-label">Digital products</div><div class="stat-value" style="color:var(--teal)">${digital}</div></div>
   `;
   // Low stock banner — own items only
-  const lowOwn=inventory.filter(i=>isOwnItem(i)&&i['Reorder Threshold']&&Number(i['Qty'])<=Number(i['Reorder Threshold']));
+  const lowOwn=inventory.filter(i=>isOwnItem(i)&&Number(i['Qty'])<5);
   const banner=document.getElementById('inv-low-stock-banner');
   if(banner){
     if(lowOwn.length){
@@ -618,7 +618,7 @@ function renderInv(){
         <span style="font-size:11px;color:var(--red)">click to expand</span>
       </div>
       <div style="display:none;background:var(--red-bg);border:1px solid var(--red);border-top:none;border-radius:0 0 var(--r) var(--r);padding:8px 16px;margin-bottom:12px">
-        ${lowOwn.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(161,43,43,0.15);font-size:13px"><span>${i['Product Name']||'—'} <span style="color:var(--text3);font-size:11px">${i['SKU']||''}</span></span><span style="color:var(--red);font-weight:600">${i['Qty']} left (threshold: ${i['Reorder Threshold']})</span></div>`).join('')}
+        ${lowOwn.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(161,43,43,0.15);font-size:13px"><span>${i['Product Name']||'—'} <span style="color:var(--text3);font-size:11px">${i['SKU']||''}</span></span><span style="color:var(--red);font-weight:600">${i['Qty']} left</span></div>`).join('')}
       </div>`;
     } else {
       banner.innerHTML='';

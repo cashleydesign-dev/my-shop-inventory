@@ -727,7 +727,7 @@ function calcMargin(){
   const pkg=+document.getElementById('i-pkg').value||0,oth=+document.getElementById('i-oth').value||0;
   const total=mat+lab+dec+dig+pkg+oth;
   const mk=+document.getElementById('i-mk').value||100;
-  const sug=total*(1+mk/100);
+ const sug=mat*(1+mk/100)+lab+dec+dig+pkg+oth;
   const override=document.getElementById('i-price').value;
   const price=override?+override:sug;
   const etsyFee=+document.getElementById('i-etsy-fee').value||0;
@@ -810,7 +810,7 @@ async function saveInv(){
   const dec=+document.getElementById('i-dec').value||0,dig=+document.getElementById('i-dig').value||0;
   const pkg=+document.getElementById('i-pkg').value||0,oth=+document.getElementById('i-oth').value||0;
   const totalCost=mat+lab+dec+dig+pkg+oth;
-  const mk=+document.getElementById('i-mk').value||100,sug=totalCost*(1+mk/100);
+  const mk=+document.getElementById('i-mk').value||100,sug=mat*(1+mk/100)+lab+dec+dig+pkg+oth;
   const override=document.getElementById('i-price').value,price=override?+override:sug;
   const etsyFee=+document.getElementById('i-etsy-fee').value||0;
   const platFee=(+document.getElementById('i-plat-fee').value||0)/100;

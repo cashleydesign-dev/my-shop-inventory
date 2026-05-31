@@ -138,6 +138,7 @@ tr:hover td{background:#faf8f5}
     <button class="nav-btn" onclick="goTo('suppliers',this)">🏭 Suppliers</button>
     <button class="nav-btn" onclick="goTo('services',this)">⚙️ Services</button>
     <button class="nav-btn" onclick="goTo('quotes',this)">📋 Quotes</button>
+    <button class="nav-btn" onclick="goTo('invoices',this)">🧾 Invoices</button>
     <button class="nav-btn" onclick="goTo('sales',this)">💰 Sales</button>
     <button class="nav-btn" onclick="goTo('expenses',this)">🧾 Expenses</button>
     <button class="nav-btn" onclick="goTo('jobs',this)">🏗️ Jobs</button>
@@ -228,6 +229,37 @@ tr:hover td{background:#faf8f5}
       <th style="width:90px">Date</th><th style="width:160px">Description</th><th style="width:110px">Category</th><th style="width:100px">Supplier</th><th style="width:70px">Amount</th><th style="width:60px">GST</th><th style="width:60px">PST</th><th style="width:75px">Total paid</th><th style="width:130px">Payment</th><th style="width:80px">Receipt #</th><th style="width:70px">Actions</th>
     </tr></thead>
     <tbody id="exp-tbody"><tr><td colspan="11"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
+  </table></div></div>
+</div>
+<!-- INVOICES PAGE -->
+<div class="page" id="page-invoices">
+  <div class="sec-hd">
+    <h2>Invoices</h2>
+    <button class="primary" onclick="openInvoiceModal()">+ New invoice</button>
+  </div>
+  <div class="stats" id="inv-stats-inv"></div>
+  <div class="toolbar">
+    <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="invoice-search" placeholder="Search customer, invoice #…" oninput="renderInvoices()"></div>
+    <select id="invoice-status" onchange="renderInvoices()" style="width:auto">
+      <option value="">All statuses</option>
+      <option>Draft</option><option>Sent</option><option>Paid</option><option>Overdue</option><option>Void</option>
+    </select>
+  </div>
+  <div class="card"><div class="tbl-wrap"><table style="min-width:900px">
+    <thead><tr>
+      <th style="width:90px">Invoice #</th>
+      <th style="width:150px">Customer</th>
+      <th style="width:80px">Date</th>
+      <th style="width:80px">Due date</th>
+      <th style="width:80px">Quote #</th>
+      <th style="width:90px">Total</th>
+      <th style="width:90px">Deposit paid</th>
+      <th style="width:90px">Balance due</th>
+      <th style="width:110px">Wave Inv #</th>
+      <th style="width:90px">Status</th>
+      <th style="width:90px">Actions</th>
+    </tr></thead>
+    <tbody id="invoice-tbody"><tr><td colspan="11"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
   </table></div></div>
 </div>
 <!-- SERVICES PAGE -->
@@ -473,8 +505,9 @@ tr:hover td{background:#faf8f5}
 <div class="toast" id="toast"></div>
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec';
-let inventory=[], suppliers=[], sales=[], expenses=[], customers=[], jobs=[];
-let editInvId=null, editSupId=null, editSaleId=null, editExpId=null, editCustId=null;
+let inventory=[], suppliers=[], sales=[], expenses=[], customers=[], jobs=[], invoices=[];
+let invoiceN=1;
+let editInvId=null, editSupId=null, editSaleId=null, editExpId=null, editCustId=null, editInvoiceId=null;
 let invSkuN=1;
 const PLAT_BADGE={'Etsy':'b-etsy','My website':'b-web','Amazon KDP':'b-kdp','Craft fair / in-person':'b-fair'};
 const STAGE_BADGE={'Raw':'b-raw','WIP':'b-wip','Finished':'b-finished','Digital':'b-digital'};
@@ -505,7 +538,7 @@ async function apiCall(params){
 }
 async function loadAll(){
   try{
-    const [inv,sup,sal,exp,svc,qt,cst,jbs]=await Promise.all([
+    const [inv,sup,sal,exp,svc,qt,cst,jbs,invs]=await Promise.all([
       apiCall({action:'getSheet',sheet:'Inventory'}),
       apiCall({action:'getSheet',sheet:'Suppliers'}),
       apiCall({action:'getSheet',sheet:'Sales'}),
@@ -513,7 +546,8 @@ async function loadAll(){
       apiCall({action:'getSheet',sheet:'Services'}),
       apiCall({action:'getSheet',sheet:'Quotes'}),
       apiCall({action:'getSheet',sheet:'Customers'}),
-      apiCall({action:'getSheet',sheet:'Jobs'})
+      apiCall({action:'getSheet',sheet:'Jobs'}),
+      apiCall({action:'getSheet',sheet:'Invoices'})
     ]);
     inventory=inv.rows||inv.data||[];
     suppliers=sup.rows||sup.data||[];
@@ -523,8 +557,10 @@ async function loadAll(){
     quotes=qt.rows||qt.data||[];
     customers=cst.rows||cst.data||[];
     jobs=jbs.rows||jbs.data||[];
+    invoices=invs.rows||invs.data||[];
     if(inventory.length){const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);invSkuN=Math.max(...nums)+1;}
     if(quotes.length){const nums=quotes.map(q=>parseInt((q['Quote #']||'').split('-')[1])||0);quoteN=Math.max(...nums)+1;}
+  if(invoices.length){const nums=invoices.map(i=>parseInt((i['Invoice #']||'').replace('INV-','')||0));invoiceN=Math.max(0,...nums)+1;}
     renderAll();
     toast('All data loaded','ok');
   }catch(e){
@@ -537,7 +573,7 @@ function renderAll(){
   if(inventory.length){const nums=inventory.map(i=>parseInt((i['SKU']||'').split('-')[1])||0);invSkuN=Math.max(...nums)+1;}
   if(quotes.length){const nums=quotes.map(q=>parseInt((q['Quote #']||'').split('-')[1])||0);quoteN=Math.max(...nums)+1;}
   renderDashboard();renderInv();renderSuppliers();renderServices();renderQuotes();
-  renderSales();renderExp();renderCustomers();renderJobs();
+  renderInvoices();renderSales();renderExp();renderCustomers();renderJobs();
   populateSupDropdowns();populateMonthFilters();
 }
 function goTo(page,btn){
@@ -1433,6 +1469,305 @@ async function saveSvc(){
     closeModal('svc-modal');renderServices();toast(editSvcId?'Service updated!':'Service added!','ok');
   }catch(e){toast('Error saving','err')}finally{btn.textContent='Save service';btn.disabled=false}
 }
+
+/* ===== INVOICES ===== */
+function makeInvoiceNum(){const n=String(invoiceN).padStart(4,'0');invoiceN++;return 'INV-'+n;}
+
+function renderInvoices(){
+  const q=(document.getElementById('invoice-search')||{}).value||'';
+  const ql=q.toLowerCase();
+  const st=(document.getElementById('invoice-status')||{}).value||'';
+  const filtered=invoices.filter(i=>{
+    const str=((i['Invoice #']||'')+(i['Customer']||'')+(i['Wave Invoice #']||'')).toLowerCase();
+    if(ql&&!str.includes(ql))return false;
+    if(st&&i['Status']!==st)return false;
+    return true;
+  });
+  const totalOwed=filtered.filter(i=>i['Status']!=='Paid'&&i['Status']!=='Void').reduce((s,i)=>s+(Number(i['Balance Due'])||0),0);
+  const paid=filtered.filter(i=>i['Status']==='Paid').length;
+  const overdue=filtered.filter(i=>i['Status']==='Overdue').length;
+  const statsEl=document.getElementById('inv-stats-inv');
+  if(statsEl)statsEl.innerHTML=`
+    <div class="stat"><div class="stat-label">Invoices shown</div><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat"><div class="stat-label">Outstanding</div><div class="stat-value accent">${fmt(totalOwed)}</div></div>
+    <div class="stat"><div class="stat-label">Paid</div><div class="stat-value green">${paid}</div></div>
+    <div class="stat"><div class="stat-label">Overdue</div><div class="stat-value red">${overdue}</div></div>
+  `;
+  const statusColors={Draft:'b-raw',Sent:'b-web',Paid:'b-finished',Overdue:'b-emb',Void:'b-digital'};
+  const tb=document.getElementById('invoice-tbody');
+  if(!tb)return;
+  if(!filtered.length){tb.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${invoices.length?'No matches':'No invoices yet'}</div><div>${invoices.length?'Try adjusting filters':'Click "+ New invoice" or convert an approved quote'}</div></div></td></tr>`;return;}
+  tb.innerHTML=[...filtered].reverse().map(i=>`<tr>
+    <td class="mono">${i['Invoice #']||'—'}</td>
+    <td style="font-weight:500">${i['Customer']||'—'}</td>
+    <td style="font-size:12px">${fmtDate(i['Date'])}</td>
+    <td style="font-size:12px;color:${i['Status']==='Overdue'?'var(--red)':'var(--text2)'}">${fmtDate(i['Due Date'])}</td>
+    <td class="mono" style="font-size:11px;color:var(--text3)">${i['Quote #']||'—'}</td>
+    <td style="font-weight:600">${fmt(i['Total'])}</td>
+    <td style="color:var(--green)">${fmt(i['Deposit Paid'])}</td>
+    <td style="font-weight:600;color:${Number(i['Balance Due'])>0?'var(--accent)':'var(--green)'}">${fmt(i['Balance Due'])}</td>
+    <td style="font-size:11px;color:var(--text3)">${i['Wave Invoice #']||'—'}</td>
+    <td><span class="badge ${statusColors[i['Status']]||''}">${i['Status']||'—'}</span></td>
+    <td style="display:flex;flex-wrap:wrap;gap:3px">
+      <button class="sm ghost" onclick="editInvoice('${i['ID']}')">Edit</button>
+      <button class="sm ghost" onclick="printInvoiceById('${i['ID']}')">PDF</button>
+      <button class="sm ghost danger" onclick="delInvoice('${i['ID']}')">Del</button>
+    </td>
+  </tr>`).join('');
+}
+
+let ivLineCount=0;
+function addInvoiceLine(data=null){
+  ivLineCount++;
+  const id='ivl-'+ivLineCount;
+  const container=document.getElementById('iv-lines');
+  const div=document.createElement('div');
+  div.id=id;
+  div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:8px';
+  div.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Line ${ivLineCount}</span>
+      <button type="button" class="sm ghost danger" onclick="document.getElementById('${id}').remove();calcInvoice()">Remove</button>
+    </div>
+    <div class="fg">
+      <label style="grid-column:1/-1">Description <input type="text" id="${id}-desc" placeholder="e.g. Embroidered hoodies × 12 — left chest + full back" oninput="calcInvoice()"></label>
+      <label>Qty <input type="number" id="${id}-qty" min="1" value="1" oninput="calcInvoice()"></label>
+      <label>Unit price ($) <input type="number" id="${id}-price" min="0" step="0.01" placeholder="0.00" oninput="calcInvoice()"></label>
+    </div>`;
+  container.appendChild(div);
+  if(data){
+    if(data.desc)document.getElementById(id+'-desc').value=data.desc;
+    if(data.qty)document.getElementById(id+'-qty').value=data.qty;
+    if(data.price)document.getElementById(id+'-price').value=data.price;
+  }
+  calcInvoice();
+}
+
+function calcInvoice(){
+  const exempt=(document.getElementById('iv-exempt')||{}).value||'No';
+  let subtotal=0;
+  [...(document.getElementById('iv-lines')||{children:[]}).children].forEach(el=>{
+    if(!el.id)return;
+    const qty=+document.getElementById(el.id+'-qty').value||0;
+    const price=+document.getElementById(el.id+'-price').value||0;
+    subtotal+=qty*price;
+  });
+  const gst=exempt==='Yes'?0:subtotal*0.05;
+  const pst=(exempt==='Yes'||exempt==='GST only')?0:subtotal*0.07;
+  const total=subtotal+gst+pst;
+  const deposit=+document.getElementById('iv-deposit').value||0;
+  const balance=total-deposit;
+  document.getElementById('iv-subtotal').textContent=fmt(subtotal);
+  document.getElementById('iv-gst').textContent=fmt(gst);
+  document.getElementById('iv-pst').textContent=fmt(pst);
+  document.getElementById('iv-total').textContent=fmt(total);
+  const bal=document.getElementById('iv-balance');
+  bal.textContent=fmt(balance);
+  bal.style.color=balance<=0?'var(--green)':'var(--accent)';
+}
+
+function openInvoiceModal(id=null){
+  editInvoiceId=id;
+  ivLineCount=0;
+  document.getElementById('iv-lines').innerHTML='';
+  document.getElementById('invoice-modal-title').textContent=id?'Edit invoice':'New invoice';
+  document.getElementById('iv-cust-dl').innerHTML=customers.map(c=>'<option value="'+(c.Company||c.Name||'').replace(/"/g,'&quot;')+'">').join('');
+  if(!id){
+    document.getElementById('iv-num').value=makeInvoiceNum();
+    document.getElementById('iv-date').value=today();
+    const due=new Date();due.setDate(due.getDate()+30);
+    document.getElementById('iv-due').value=due.toISOString().split('T')[0];
+    document.getElementById('iv-status').value='Draft';
+    ['iv-customer','iv-quote','iv-deposit','iv-wave','iv-terms','iv-notes'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('iv-exempt').value='No';
+    addInvoiceLine();
+  }else{
+    const inv=invoices.find(x=>x['ID']===id);
+    document.getElementById('iv-num').value=inv['Invoice #']||'';
+    document.getElementById('iv-date').value=(inv['Date']||today()).split('T')[0];
+    document.getElementById('iv-due').value=(inv['Due Date']||'').split('T')[0];
+    document.getElementById('iv-status').value=inv['Status']||'Draft';
+    document.getElementById('iv-customer').value=inv['Customer']||'';
+    document.getElementById('iv-quote').value=inv['Quote #']||'';
+    document.getElementById('iv-deposit').value=inv['Deposit Paid']||'';
+    document.getElementById('iv-wave').value=inv['Wave Invoice #']||'';
+    document.getElementById('iv-terms').value=inv['Payment Terms']||'';
+    document.getElementById('iv-notes').value=inv['Notes']||'';
+    document.getElementById('iv-exempt').value=inv['Tax Exempt']||'No';
+    try{const lines=JSON.parse(inv['Lines']||'[]');lines.forEach(l=>addInvoiceLine(l));}
+    catch(e){addInvoiceLine();}
+  }
+  calcInvoice();
+  document.getElementById('invoice-modal').classList.add('open');
+}
+
+function editInvoice(id){openInvoiceModal(id)}
+
+function convertQuoteToInvoice(quoteId){
+  const qt=quotes.find(x=>x['ID']===quoteId);if(!qt)return;
+  // Pre-fill invoice modal from quote data
+  openInvoiceModal();
+  setTimeout(()=>{
+    document.getElementById('iv-customer').value=qt['Customer']||'';
+    document.getElementById('iv-quote').value=qt['Quote #']||'';
+    document.getElementById('iv-deposit').value=qt['Deposit']||'';
+    document.getElementById('iv-notes').value=qt['Notes']||'';
+    // Convert quote lines into invoice lines
+    document.getElementById('iv-lines').innerHTML='';
+    ivLineCount=0;
+    try{
+      const lines=JSON.parse(qt['Lines']||'[]');
+      if(lines.length){
+        lines.forEach(l=>{
+          const qty=Number(l.qty)||1;
+          // Calculate the line total from the quote (use stored linetotal if available, else estimate)
+          const desc=l.desc||(l.garment?'Garment + decoration':'Line item');
+          addInvoiceLine({desc:desc+` × ${qty}`,qty:1,price:0});
+        });
+      } else {addInvoiceLine({desc:'Services per quote '+qt['Quote #'],qty:1,price:Number(qt['Total']||0)-Number(qt['Deposit']||0)});}
+    }catch(e){
+      addInvoiceLine({desc:'Services per quote '+qt['Quote #'],qty:1,price:Number(qt['Total']||0)-Number(qt['Deposit']||0)});
+    }
+    calcInvoice();
+  },50);
+}
+
+async function saveInvoice(){
+  const customer=document.getElementById('iv-customer').value.trim();
+  if(!customer){alert('Please enter a customer name');return;}
+  const btn=document.getElementById('invoice-save-btn');btn.textContent='Saving…';btn.disabled=true;
+  const lineEls=[...document.getElementById('iv-lines').children].filter(el=>el.id);
+  const linesData=lineEls.map(el=>{const id=el.id;return{desc:document.getElementById(id+'-desc').value,qty:document.getElementById(id+'-qty').value,price:document.getElementById(id+'-price').value};});
+  const subtotal=parseFloat((document.getElementById('iv-subtotal').textContent||'').replace('$',''))||0;
+  const gst=parseFloat((document.getElementById('iv-gst').textContent||'').replace('$',''))||0;
+  const pst=parseFloat((document.getElementById('iv-pst').textContent||'').replace('$',''))||0;
+  const total=parseFloat((document.getElementById('iv-total').textContent||'').replace('$',''))||0;
+  const deposit=+document.getElementById('iv-deposit').value||0;
+  const iid=editInvoiceId||'IV-'+Date.now();
+  const row={
+    'ID':iid,'Invoice #':document.getElementById('iv-num').value,'Customer':customer,
+    'Date':document.getElementById('iv-date').value,'Due Date':document.getElementById('iv-due').value,
+    'Status':document.getElementById('iv-status').value,'Quote #':document.getElementById('iv-quote').value,
+    'Subtotal':subtotal,'GST':gst,'PST':pst,'Total':total,
+    'Deposit Paid':deposit,'Balance Due':total-deposit,
+    'Tax Exempt':document.getElementById('iv-exempt').value,
+    'Wave Invoice #':document.getElementById('iv-wave').value.trim(),
+    'Payment Terms':document.getElementById('iv-terms').value.trim(),
+    'Notes':document.getElementById('iv-notes').value.trim(),
+    'Lines':JSON.stringify(linesData)
+  };
+  try{
+    await apiCall({action:'saveRow',sheet:'Invoices',keyCol:'ID',row});
+    if(editInvoiceId){const idx=invoices.findIndex(i=>i['ID']===editInvoiceId);if(idx>=0)invoices[idx]=row;}
+    else invoices.push(row);
+    closeModal('invoice-modal');renderAll();
+    toast(editInvoiceId?'Invoice updated!':'Invoice saved!','ok');
+  }catch(e){toast('Error saving invoice','err');}
+  finally{btn.textContent='Save invoice';btn.disabled=false;}
+}
+
+async function delInvoice(id){
+  if(!confirm('Delete this invoice?'))return;
+  try{
+    await apiCall({action:'deleteRow',sheet:'Invoices',key:'ID',value:id});
+    invoices=invoices.filter(i=>i['ID']!==id);renderAll();toast('Invoice deleted','ok');
+  }catch(e){toast('Error deleting','err');}
+}
+
+function printInvoice(){
+  // Collect current modal data for print preview
+  const num=document.getElementById('iv-num').value||'—';
+  const customer=document.getElementById('iv-customer').value||'—';
+  const date=document.getElementById('iv-date').value||'';
+  const due=document.getElementById('iv-due').value||'';
+  const quoteRef=document.getElementById('iv-quote').value||'';
+  const terms=document.getElementById('iv-terms').value||'';
+  const notes=document.getElementById('iv-notes').value||'';
+  const wave=document.getElementById('iv-wave').value||'';
+  const subtotal=document.getElementById('iv-subtotal').textContent||'$0.00';
+  const gst=document.getElementById('iv-gst').textContent||'$0.00';
+  const pst=document.getElementById('iv-pst').textContent||'$0.00';
+  const total=document.getElementById('iv-total').textContent||'$0.00';
+  const deposit=document.getElementById('iv-deposit').value||'0';
+  const balance=document.getElementById('iv-balance').textContent||'$0.00';
+  const lineEls=[...document.getElementById('iv-lines').children].filter(el=>el.id);
+  const lineRows=lineEls.map(el=>{
+    const id=el.id;
+    const desc=document.getElementById(id+'-desc').value||'';
+    const qty=document.getElementById(id+'-qty').value||'1';
+    const price=document.getElementById(id+'-price').value||'0';
+    const lineTotal=fmt(Number(qty)*Number(price));
+    return`<tr><td style="padding:10px 8px;border-bottom:1px solid #eee">${desc}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:center">${qty}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right">${fmt(Number(price))}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:600">${lineTotal}</td></tr>`;
+  }).join('');
+  const cust=customers.find(c=>c.Name===customer||c.Company===customer);
+  const custAddr=cust?[cust['Company']&&cust['Name']?`${cust['Company']}<br>${cust['Name']}`:cust['Company']||cust['Name'],cust['Address'],cust['Email']].filter(Boolean).join('<br>'):(customer);
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${num}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#1a1a1a;max-width:800px;margin:40px auto;padding:0 20px;font-size:14px}
+    h1{font-size:32px;color:#B85C2A;margin:0}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px}
+    .shop-name{font-size:22px;font-weight:700;color:#B85C2A;margin-bottom:4px}
+    .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px}
+    .bill-to{min-width:200px}
+    .meta{text-align:right}
+    .meta-row{margin-bottom:6px}
+    table{width:100%;border-collapse:collapse;margin:20px 0}
+    thead{background:#f5f2ed}
+    th{padding:10px 8px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;border-bottom:2px solid #ddd}
+    th:last-child,th:nth-child(3),th:nth-child(2){text-align:right}
+    .totals{margin-left:auto;width:280px;margin-top:16px}
+    .totals-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee}
+    .totals-row.total{font-weight:700;font-size:16px;border-top:2px solid #B85C2A;border-bottom:none;margin-top:4px;color:#B85C2A}
+    .totals-row.balance{font-weight:700;font-size:18px;border-bottom:none;color:#1a1a1a}
+    .footer{margin-top:48px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#888;text-align:center}
+    @media print{body{margin:20px}}
+  </style></head><body>
+  <div class="header">
+    <div>
+      <div class="shop-name">My Shop</div>
+      <div style="font-size:13px;color:#888">cashleydesign-dev.github.io</div>
+    </div>
+    <div><h1>INVOICE</h1></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:40px">
+    <div class="bill-to">
+      <div class="label">Bill to</div>
+      <div style="line-height:1.7">${custAddr}</div>
+    </div>
+    <div class="meta">
+      <div class="meta-row"><div class="label">Invoice #</div><strong>${num}</strong></div>
+      <div class="meta-row"><div class="label">Date</div>${fmtDate(date)}</div>
+      <div class="meta-row"><div class="label">Due date</div><strong>${fmtDate(due)}</strong></div>
+      ${quoteRef?`<div class="meta-row"><div class="label">Quote ref</div>${quoteRef}</div>`:''}
+      ${wave?`<div class="meta-row"><div class="label">Wave Invoice #</div>${wave}</div>`:''}
+      ${terms?`<div class="meta-row"><div class="label">Terms</div>${terms}</div>`:''}
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>${lineRows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="totals-row"><span>Subtotal</span><span>${subtotal}</span></div>
+    <div class="totals-row"><span>GST (5%)</span><span>${gst}</span></div>
+    <div class="totals-row"><span>PST (7%)</span><span>${pst}</span></div>
+    <div class="totals-row total"><span>Total</span><span>${total}</span></div>
+    ${Number(deposit)>0?`<div class="totals-row"><span>Deposit paid</span><span style="color:green">− ${fmt(Number(deposit))}</span></div>`:''}
+    <div class="totals-row balance"><span>Balance due</span><span>${balance}</span></div>
+  </div>
+  ${notes?`<div style="margin-top:32px"><div class="label">Notes</div><div style="margin-top:4px;color:#555">${notes}</div></div>`:''}
+  <div class="footer">Thank you for your business!</div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
+}
+
+function printInvoiceById(id){
+  const inv=invoices.find(x=>x['ID']===id);if(!inv)return;
+  openInvoiceModal(id);
+  setTimeout(()=>{printInvoice();},200);
+}
+
 /* ===== QUOTES ===== */
 function renderQuotes(){
   const q=document.getElementById('quote-search').value.toLowerCase();
@@ -1464,7 +1799,7 @@ function renderQuotes(){
     <td style="font-weight:600">${fmt(qt['Total'])}</td>
     <td style="color:var(--accent)">${fmt(qt['Deposit'])}</td>
     <td><span class="badge ${statusColors[qt['Status']]||''}">${qt['Status']||'—'}</span></td>
-    <td><button class="sm ghost" onclick="editQuote('${qt['ID']}')">Edit</button><button class="sm ghost danger" onclick="delQuote('${qt['ID']}')">Del</button></td>
+    <td style="display:flex;flex-wrap:wrap;gap:3px">${qt['Status']==='Approved'?`<button class="sm secondary" onclick="convertQuoteToInvoice('${qt['ID']}')">→ Invoice</button>`:''}<button class="sm ghost" onclick="editQuote('${qt['ID']}')">Edit</button><button class="sm ghost danger" onclick="delQuote('${qt['ID']}')">Del</button></td>
   </tr>`).join('');
 }
 let quoteLines=[];
@@ -1842,6 +2177,53 @@ function pickGarment(id,sku,cost,label){
 }
 document.addEventListener('click',function(e){if(!e.target.closest||!e.target.closest('[id$="-garment-search"]')){document.querySelectorAll('[id$="-garment-dd"]').forEach(function(d){d.style.display='none';});}});
 </script>
+<!-- INVOICE MODAL -->
+<div class="overlay" id="invoice-modal"><div class="modal" style="width:min(720px,96vw)">
+  <div class="modal-hd"><h2 id="invoice-modal-title">New invoice</h2><button class="ghost" onclick="closeModal('+"'invoice-modal')"+">✕</button></div>
+  <div class="modal-bd">
+    <div class="sec-label">Invoice details</div>
+    <div class="fg">
+      <label>Customer <input type="text" id="iv-customer" list="iv-cust-dl" placeholder="e.g. ABC Company"><datalist id="iv-cust-dl"></datalist></label>
+      <label>Invoice # <input type="text" id="iv-num" readonly style="background:var(--surface2)"></label>
+      <label>Date <input type="date" id="iv-date"></label>
+      <label>Due date <input type="date" id="iv-due"></label>
+      <label>Linked quote # <input type="text" id="iv-quote" placeholder="e.g. Q-0001 (optional)"></label>
+      <label>Status <select id="iv-status">
+        <option>Draft</option><option>Sent</option><option>Paid</option><option>Overdue</option><option>Void</option>
+      </select></label>
+    </div>
+    <div class="sec-label" style="margin-top:16px">Line items</div>
+    <div id="iv-lines"></div>
+    <button style="margin-top:10px;width:100%" onclick="addInvoiceLine()">+ Add line</button>
+    <div class="sec-label" style="margin-top:16px">Totals &amp; payment</div>
+    <div class="fg">
+      <label>Tax exempt? <select id="iv-exempt">
+        <option value="No">No — GST + PST</option>
+        <option value="GST only">GST only</option>
+        <option value="Yes">Yes — fully exempt</option>
+      </select></label>
+      <label>Deposit already paid ($) <input type="number" id="iv-deposit" min="0" step="0.01" placeholder="0.00" oninput="calcInvoice()"></label>
+    </div>
+    <div class="profit-box" style="margin-top:12px;grid-template-columns:repeat(5,1fr)">
+      <div><div class="pb-label">Subtotal</div><div class="pb-val" id="iv-subtotal">$0.00</div></div>
+      <div><div class="pb-label">GST (5%)</div><div class="pb-val" id="iv-gst">$0.00</div></div>
+      <div><div class="pb-label">PST (7%)</div><div class="pb-val" id="iv-pst">$0.00</div></div>
+      <div><div class="pb-label">Total</div><div class="pb-val" id="iv-total" style="color:var(--accent)">$0.00</div></div>
+      <div><div class="pb-label">Balance due</div><div class="pb-val" id="iv-balance" style="color:var(--green)">$0.00</div></div>
+    </div>
+    <div class="sec-label" style="margin-top:16px">Wave &amp; notes</div>
+    <div class="fg">
+      <label>Wave invoice # <input type="text" id="iv-wave" placeholder="e.g. INV-2026-042"></label>
+      <label>Payment terms <input type="text" id="iv-terms" placeholder="e.g. Net 30, Due on receipt"></label>
+    </div>
+    <div class="fl" style="margin-top:8px"><label>Notes <textarea id="iv-notes" placeholder="Any additional notes for the customer…"></textarea></label></div>
+  </div>
+  <div class="modal-ft">
+    <button onclick="closeModal('+"'invoice-modal')"+">Cancel</button>
+    <button onclick="printInvoice()" style="margin-right:auto">🖨 Print / PDF</button>
+    <button class="primary" id="invoice-save-btn" onclick="saveInvoice()">Save invoice</button>
+  </div>
+</div></div>
 <!-- CUSTOMER MODAL -->
 <div class="overlay" id="cust-modal"><div class="modal">
   <div class="modal-hd"><h2 id="cust-modal-title">Add customer</h2><button class="ghost" onclick="closeModal('cust-modal')">✕</button></div>
@@ -1855,36 +2237,4 @@ document.addEventListener('click',function(e){if(!e.target.closest||!e.target.cl
     <div class="fg">
       <label>Tax exempt? <select id="c-taxexempt"><option value="No">No — taxable</option><option value="Yes">Yes — fully exempt</option><option value="GST only">GST only</option></select></label>
       <label style="grid-column:1/-1">Notes <textarea id="c-notes" rows="2" placeholder="Any notes about this customer…" style="width:100%;resize:vertical;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit"></textarea></label>
-    </div>
-    <div class="sec-label">Contact details</div>
-    <div class="fg">
-      <label>Full name* <input type="text" id="c-name" placeholder="Jane Smith"></label>
-      <label>Email <input type="email" id="c-email" placeholder="jane@example.com"></label>
-      <label>Phone <input type="tel" id="c-phone" placeholder="+1 (604) 555-0100"></label>
-    </div>
-  </div>
-  <div class="modal-ft"><button onclick="closeModal('cust-modal')">Cancel</button><button class="primary" id="cust-save-btn" onclick="saveCust()">Save customer</button></div>
-</div></div>
-<!-- CUSTOMER PROFILE MODAL -->
-<div class="overlay" id="cust-profile-modal"><div class="modal" style="width:min(700px,96vw)">
-  <div class="modal-hd"><h2 id="cust-profile-name">Customer</h2><button class="ghost" onclick="closeModal('cust-profile-modal')">✕</button></div>
-  <div class="modal-bd">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div><div class="sec-label">Contact</div><div id="cprof-contact" style="font-size:14px;line-height:1.9"></div></div>
-      <div><div class="sec-label">Business</div><div id="cprof-business" style="font-size:14px;line-height:1.9"></div></div>
-    </div>
-    <div id="cprof-notes-wrap" style="margin-bottom:16px;display:none">
-      <div class="sec-label">Notes</div>
-      <div id="cprof-notes" style="font-size:13px;color:var(--text2);font-style:italic;padding:8px;background:var(--surface2);border-radius:6px"></div>
-    </div>
-    <div class="sec-label">Order history</div>
-    <div id="cprof-history" style="font-size:13px;max-height:260px;overflow-y:auto"></div>
-    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-      <button class="primary" id="cprof-quote-btn">+ New quote</button>
-      <button class="primary" id="cprof-sale-btn">+ Record sale</button>
-      <button id="cprof-edit-btn">Edit customer</button>
-    </div>
-  </div>
-</div></div>
-</body>
-</html>
+    </di

@@ -1177,7 +1177,7 @@ function printInvoice(){
 }
 function printInvoiceById(id){const inv=invoices.find(x=>x['ID']===id);if(!inv)return;openInvoiceModal(id);setTimeout(()=>{printInvoice();},200);}
 /* ===== QUOTES ===== */
-let quoteLineCount=0,editQuoteId=null,depositMode='$';
+let quoteLineCount=0,depositMode='$';
 function makeQuoteNum(){const n=String(quoteN).padStart(4,'0');quoteN++;return'Q-'+n;}
 function setDepositMode(m){depositMode=m;const d=document.getElementById('q-dep-dollar');const p=document.getElementById('q-dep-pct');if(d){d.style.background=m==='$'?'var(--accent)':'var(--surface)';d.style.color=m==='$'?'white':'var(--text)';d.style.borderColor=m==='$'?'var(--accent)':'var(--border)';}if(p){p.style.background=m==='%'?'var(--accent)':'var(--surface)';p.style.color=m==='%'?'white':'var(--text)';p.style.borderColor=m==='%'?'var(--accent)':'var(--border)';}calcQuote();}
 function renderQuotes(){

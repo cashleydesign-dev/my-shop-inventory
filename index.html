@@ -1320,7 +1320,7 @@ async function saveJob(){
   if(!row.Item){toast('Item description is required','err');return;}
   try{if(_editJobId){row.ID=_editJobId;await apiCall({action:'saveRow',sheet:'Jobs',keyCol:'ID',row});const i=jobs.findIndex(j=>(j.ID||j.id)==_editJobId);if(i>=0)jobs[i]=Object.assign({},jobs[i],row);}else{const res=await apiCall({action:'saveRow',sheet:'Jobs',keyCol:'ID',row:{...row,ID:'JOB-'+Date.now()}});row.ID=(res&&(res.id||res.ID))||'JOB-'+Date.now();jobs.push(row);}renderJobs();closeJobModal();toast('Job saved','ok');}catch(e){toast('Error saving job','err');}
 }
-async function deleteJob(){if(!_editJobId)return;if(!confirm('Delete this job?'))return;try{await apiCall({action:'deleteRow',sheet:'Jobs',keyCol:'ID',keyVal:_editJobId});jobs=jobs.filter(j=>(j.ID||j.id)!=_editJobId);renderJobs();closeJobModal();toast('Job deleted','ok');}catch(e){toast('Error deleting job','err');}}
+async function deleteJob(){if(!_editJobId)return;if(!confirm('Delete this job?'))return;try{await apiCall({action:'deleteRow',sheet:'Jobs',key:'ID',value:_editJobId});jobs=jobs.filter(j=>(j.ID||j.id)!=_editJobId);renderJobs();closeJobModal();toast('Job deleted','ok');}catch(e){toast('Error deleting job','err');}}
 /* ===== CALCULATOR ===== */
 function renderCalculator(){
   populateCalcEmbSvcs();

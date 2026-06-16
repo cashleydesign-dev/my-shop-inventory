@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Change only the page name here for each module (e.g. "Customers") -->
+  <title>C. Ashley Design — Template</title>
+
+  <!-- ============================================================
+       ZONE 1 — SHELL STYLES        ★ COPY TO EVERY PAGE, UNCHANGED ★
+       This is the shared look (colours, fonts, buttons, tables).
+       For now it's a clean placeholder. When you're ready, paste your
+       REAL styles from index.html in place of this whole <style> block
+       so every page matches the app you already have.
+       ============================================================ -->
+  <style>
+    :root {
+      --brand: #6b5b95;          /* C. Ashley Design purple — set to your exact brand colour */
+      --brand-dark: #4f4370;
+      --ink: #2c2c2a;
+      --muted: #6b6b66;
+      --line: #e3e0d8;
+      --bg: #faf9f6;
+      --ok: #1d7a4f;
+      --bad: #b3261e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--brand);
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    header .brand { font-size: 20px; font-weight: 600; }
+    header .tagline { font-size: 12px; opacity: 0.85; }
+    header .pagename { font-size: 14px; font-weight: 500; }
+    header a { color: #fff; text-decoration: none; opacity: 0.9; }
+    header a:hover { opacity: 1; text-decoration: underline; }
+    main { max-width: 900px; margin: 24px auto; padding: 0 24px; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    input[type="text"] {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 220px;
+    }
+    button {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: var(--brand-dark); }
+    .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    #status { margin-top: 16px; font-size: 14px; }
+    #status.ok { color: var(--ok); }
+    #status.bad { color: var(--bad); }
+    pre {
+      background: #f4f2ec;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       ZONE 2 — HEADER             ★ COPY TO EVERY PAGE ★
+       The only thing you change per page is the .pagename text.
+       (Update the phone/email to your real details once.)
+       ============================================================ -->
+  <header>
+    <div>
+      <div class="brand">C. Ashley Design</div>
+      <div class="tagline">Design · Print · Signage · Apparel · Embroidery · Promo</div>
+    </div>
+    <!-- "Menu" links back to your home/menu page once you build it -->
+    <div class="pagename"><a href="index.html">‹ Menu</a> &nbsp; Template page</div>
+  </header>
+
+  <main>
+
+    <!-- ============================================================
+         ZONE 3 — PAGE CONTENT      ◆ REPLACE THIS PER PAGE ◆
+         Everything above and below stays the same on every page.
+         ONLY this middle part changes — it's where each module
+         (Customers, Jobs, etc.) does its own thing.
+
+         Right now it holds a "Test connection" tool that reads one
+         sheet from your Google Sheets, to prove the backend works.
+         When you build a real page, delete this card and put the
+         real content here.
+         ============================================================ -->
+    <div class="card">
+      <h1>Backend connection test</h1>
+      <p class="sub">Reads one sheet through Apps Script, to confirm the page can talk to your Google Sheets.</p>
+
+      <div class="row">
+        <div>
+          <label for="sheetName">Sheet name</label>
+          <input type="text" id="sheetName" value="Products">
+        </div>
+        <button onclick="testConnection()">Test connection</button>
+      </div>
+
+      <div id="status"></div>
+      <pre id="output" hidden></pre>
+    </div>
+    <!-- ◆ END REPLACE ZONE ◆ -->
+
+  </main>
+
+  <!-- ============================================================
+       ZONE 4 — BACKEND            ★ COPY TO EVERY PAGE, UNCHANGED ★
+       This is the ONLY way the page talks to your Google Sheets.
+       It's the single most important thing to reuse everywhere.
+
+       ★★ IMPORTANT ★★
+       If your index.html ALREADY has a working apiCall() function,
+       use THAT one instead of the one below — yours is already proven
+       to work with your exact setup. Copy your real apiCall() in here,
+       keep your real BACKEND_URL, and you're done. The version below is
+       a clean reference so you can see the shape it should take.
+       ============================================================ -->
+  <script>
+    // -- CONFIG ------------------------------------------------------
+    // Your Apps Script deployment URL. Confirm this matches your CURRENT
+    // deployment — the URL changes every time you redeploy the script.
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvW/exec";
+
+    // -- apiCall: the one function every page uses to reach the backend.
+    // You pass it an object describing what you want, e.g.
+    //   apiCall({ action: "getSheet", sheet: "Products" })
+    // and it returns whatever your Apps Script sends back.
+    async function apiCall(payload) {
+      const response = await fetch(BACKEND_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+        // No custom headers on purpose — that keeps it a "simple" request
+        // so the browser doesn't block it when talking to Apps Script.
+      });
+      return await response.json();
+    }
+
+    // -- The test itself. Delete this when you build a real page;
+    //    it only exists to prove the connection works.
+    async function testConnection() {
+      const status = document.getElementById("status");
+      const output = document.getElementById("output");
+      const sheet = document.getElementById("sheetName").value.trim();
+
+      status.className = "";
+      status.textContent = "Connecting…";
+      output.hidden = true;
+
+      try {
+        const result = await apiCall({ action: "getSheet", sheet: sheet });
+
+        // Try to figure out how many rows came back, no matter the shape.
+        const rows = Array.isArray(result) ? result
+                   : Array.isArray(result.rows) ? result.rows
+                   : Array.isArray(result.data) ? result.data
+                   : null;
+
+        status.className = "ok";
+        status.textContent = rows
+          ? "Connected. Got " + rows.length + " rows from \"" + sheet + "\"."
+          : "Connected. Response received from \"" + sheet + "\".";
+
+        output.hidden = false;
+        output.textContent = JSON.stringify(result, null, 2).slice(0, 4000);
+      } catch (err) {
+        status.className = "bad";
+        status.textContent = "Could not connect: " + err.message +
+          "  —  Check the BACKEND_URL is your current deployment, and that the sheet name is spelled exactly right.";
+      }
+    }
+  </script>
+</body>
+</html>

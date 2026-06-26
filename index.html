@@ -1052,7 +1052,7 @@ async function syncSelectedStyles(){
 function syncSanmar(){toast('SanMar Canada integration — coming soon!','');}
 window.addEventListener('load',()=>{const savedKey=localStorage.getItem('sns_api_key');if(savedKey){const el=document.getElementById('sns-key');if(el)el.value=savedKey;}});
 document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});});
-loadAll();
+window.addEventListener('DOMContentLoaded', loadAll);
 </script>
 <script>
 /* ===== CUSTOMERS ===== */

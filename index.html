@@ -749,7 +749,7 @@ function today(){return new Date().toISOString().split('T')[0]}
 function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T12:00:00');return isNaN(dt)?d:dt.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'});}
 function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type==='ok'?'ok':type==='err'?'err':'');setTimeout(()=>t.className='toast',3000);}
 function setSyncState(s){const d=document.getElementById('syncDot'),t=document.getElementById('syncTxt');d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');t.textContent=s==='syncing'?'Syncing…':s==='error'?'Error':'Connected';}
-async function apiCall(params){setSyncState('syncing');try{const r=await fetch(API+'?action='+params.action,{method:'POST',body:JSON.stringify(params)});const d=await r.json();setSyncState('ok');return d;}catch(e){setSyncState('error');throw e;}}
+async function apiCall(params){setSyncState('syncing');try{const r=await fetch(BACKEND_URL+'?action='+params.action,{method:'POST',body:JSON.stringify(params)});const d=await r.json();setSyncState('ok');return d;}catch(e){setSyncState('error');throw e;}}
 async function loadAll(){
   try{
     const[inv,sup,sal,exp,svc,qt,cst,jbs,invs]=await Promise.all([

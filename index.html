@@ -209,7 +209,7 @@ tr:hover td{background:#faf8f5}
 </div>
 <!-- EXPENSES -->
 <div class="page" id="page-expenses">
-  <div class="sec-hd"><h2>Expenses</h2><button class="primary" onclick="openExpModal()">+ Add expense</button><button onclick="triggerReceiptScan()" style="display:flex;align-items:center;gap:6px">📷 Scan receipt</button><input type="file" id="receipt-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this)"></div>
+  <div class="sec-hd"><h2>Expenses</h2><button class="primary" onclick="openExpModal()">+ Add expense</button><button onclick="location.href='receipts.html'" style="display:flex;align-items:center;gap:6px">📷 Scan receipt</button><input type="file" id="receipt-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this)"></div>
   <div class="stats" id="exp-stats"></div>
   <div class="toolbar">
     <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="exp-search" placeholder="Search description, supplier…" oninput="renderExp()"></div>

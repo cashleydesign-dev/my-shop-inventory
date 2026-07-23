@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>C. Ashley Design — Receipts & Expenses</title>
+
+  <!-- ============================================================
+  ZONE 1 — SHELL STYLES ★ COPIED FROM template.html, UNCHANGED ★
+============================================================ -->
+  <style>
+  :root {
+  --brand: #6b5b95;
+--brand-dark: #4f4370;
+--ink: #2c2c2a;
+--muted: #6b6b66;
+--line: #e3e0d8;
+  --bg: #faf9f6;
+  --ok: #1d7a4f;
+--bad: #b3261e;
+  }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+color: var(--ink);
+background: var(--bg);
+line-height: 1.5;
+}
+header {
+  background: var(--brand);
+color: #fff;
+padding: 16px 24px;
+display: flex;
+align-items: baseline;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 8px;
+}
+header .brand { font-size: 20px; font-weight: 600; }
+header .tagline { font-size: 12px; opacity: 0.85; }
+header .pagename { font-size: 14px; font-weight: 500; }
+header a { color: #fff; text-decoration: none; opacity: 0.9; }
+header a:hover { opacity: 1; text-decoration: underline; }
+main { max-width: 900px; margin: 24px auto; padding: 0 24px; }
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+border-radius: 10px;
+padding: 20px;
+margin-bottom: 20px;
+}
+h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+.sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+input[type="text"], input[type="date"], input[type="number"], select {
+  padding: 8px 10px;
+border: 1px solid var(--line);
+border-radius: 6px;
+font-size: 14px;
+min-width: 220px;
+width: 100%;
+}
+button {
+  background: var(--brand);
+color: #fff;
+border: none;
+border-radius: 6px;
+padding: 9px 16px;
+font-size: 14px;
+cursor: pointer;
+}
+button:hover { background: var(--brand-dark); }
+button:disabled { background: var(--muted); cursor: default; }
+button.secondary { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+button.secondary:hover { background: #f4f2ec; }
+.row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+#status { margin-top: 16px; font-size: 14px; }
+#status.ok { color: var(--ok); }
+#status.bad { color: var(--bad); }
+pre {
+  background: #f4f2ec;
+  border: 1px solid var(--line);
+border-radius: 6px;
+padding: 12px;
+font-size: 12px;
+overflow-x: auto;
+white-space: pre-wrap;
+word-break: break-word;
+                       }
+.field { margin-bottom: 14px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+  </head>
+
+  <body>
+
+  <!-- ============================================================
+       ZONE 2 — HEADER  ★ COPIED FROM template.html, UNCHANGED ★
+============================================================ -->
+  <header>
+    <div>
+      <div class="brand">C. Ashley Design</div>
+      <div class="tagline">Design · Print · Signage · Apparel · Embroidery · Promo</div>
+    </div>
+    <div class="pagename"><a href="index.html">‹ Menu</a> &nbsp; Receipts &amp; Expenses</div>
+  </header>
+
+  <main>
+
+  <!-- ============================================================
+       ZONE 3 — PAGE CONTENT  ◆ RECEIPT SCANNER ◆
+  ============================================================ -->
+  <div class="card">
+    <h1>Scan a receipt</h1>
+  <p class="sub">Take a photo or upload an image. Gemini reads the receipt, then you check the numbers before anything goes into Wave.</p>
+
+    <div class="row">
+      <div>
+        <label for="receiptFile">Receipt photo</label>
+        <input type="file" id="receiptFile" accept="image/*" capture="environment">
+      </div>
+      <button id="scanBtn" onclick="scanReceipt()">Scan Receipt</button>
+    </div>
+
+    <div id="scanStatus"></div>
+  </div>
+
+  <div class="card" id="reviewCard" hidden>
+    <h1>Review before sending to Wave</h1>
+  <p class="sub">Fix anything that looks wrong — this is the last chance before it's recorded in your books.</p>
+
+    <div class="field-grid">
+      <div class="field">
+        <label for="fVendor">Vendor</label>
+        <input type="text" id="fVendor">
+      </div>
+      <div class="field">
+        <label for="fDate">Date</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label for="fSubtotal">Subtotal (before tax)</label>
+        <input type="number" step="0.01" id="fSubtotal">
+      </div>
+      <div class="field">
+        <label for="fGst">GST</label>
+        <input type="number" step="0.01" id="fGst">
+      </div>
+      <div class="field">
+        <label for="fPst">PST</label>
+        <input type="number" step="0.01" id="fPst">
+      </div>
+      <div class="field">
+        <label for="fTotal">Total paid</label>
+        <input type="number" step="0.01" id="fTotal">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fCategory">Category</label>
+      <select id="fCategory"></select>
+      <div class="hint">Pulled live from your Wave expense categories.</div>
+  </div>
+
+  <div class="field">
+      <label for="fNotes">Notes from the scan (double-check these)</label>
+      <div id="fNotes" class="hint"></div>
+    </div>
+
+    <div class="row">
+      <button id="confirmBtn" onclick="confirmToWave()">Confirm &amp; Send to Wave</button>
+      <button class="secondary" onclick="resetForm()">Start Over</button>
+    </div>
+
+    <div id="confirmStatus"></div>
+  </div>
+  <!-- ◆ END REPLACE ZONE ◆ -->
+
+  </main>
+
+  <!-- ============================================================
+       ZONE 4 — BACKEND  ★ COPIED FROM template.html, UNCHANGED ★
+============================================================ -->
+  <script>
+  const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec";
+
+async function apiCall(payload) {
+  const response = await fetch(BACKEND_URL, {
+    method: "POST",
+          body: JSON.stringify(payload)
+      });
+  return await response.json();
+}
+</script>
+
+  <!-- ============================================================
+       RECEIPTS MODULE LOGIC — specific to this page
+============================================================ -->
+  <script>
+  let categoriesLoaded = false;
+
+async function loadCategories() {
+  const select = document.getElementById("fCategory");
+  select.innerHTML = "<option>Loading categories…</option>";
+  try {
+    const result = await apiCall({ action: "waveListAccounts" });
+    const parsed = JSON.parse(result.raw);
+    const edges = parsed.data.business.accounts.edges;
+    const expenseAccounts = edges
+      .filter(e => e.node.type.value === "EXPENSE")
+      .map(e => e.node)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    select.innerHTML = "";
+    expenseAccounts.forEach(acct => {
+            const opt = document.createElement("option");
+            opt.value = acct.id;
+      opt.textContent = acct.name;
+      select.appendChild(opt);
+  });
+    categoriesLoaded = true;
+} catch (err) {
+      select.innerHTML = "<option value=''>Could not load categories</option>";
+         }
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+                  const base64 = reader.result.split(",")[1];
+      resolve(base64);
+};
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+});
+}
+
+async function scanReceipt() {
+  const fileInput = document.getElementById("receiptFile");
+  const status = document.getElementById("scanStatus");
+  const scanBtn = document.getElementById("scanBtn");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    status.className = "bad";
+    status.textContent = "Choose or take a photo first.";
+    return;
+  }
+
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<span class="spinner"></span>Reading receipt…';
+  status.className = "";
+  status.textContent = "";
+
+  try {
+    const base64 = await fileToBase64(file);
+    const result = await apiCall({
+            action: "scanReceipt",
+            imageData: base64,
+            mimeType: file.type
+      });
+
+    if (!result.ok) {
+      throw new Error(result.error || "Unknown error reading receipt");
+    }
+
+    const data = result.data;
+    document.getElementById("fVendor").value = data.vendor || "";
+    document.getElementById("fDate").value = data.date || "";
+    document.getElementById("fSubtotal").value = data.subtotal != null ? data.subtotal : "";
+    document.getElementById("fGst").value = data.gst != null ? data.gst : "";
+    document.getElementById("fPst").value = data.pst != null ? data.pst : "";
+    document.getElementById("fTotal").value = data.total != null ? data.total : "";
+    document.getElementById("fNotes").textContent = data.notes || "Nothing flagged — looks clean.";
+
+    document.getElementById("reviewCard").hidden = false;
+    if (!categoriesLoaded) await loadCategories();
+
+    status.className = "ok";
+    status.textContent = "Read successfully. Check the numbers below before sending to Wave.";
+  } catch (err) {
+    status.className = "bad";
+    status.textContent = "Could not read receipt: " + err.message;
+  } finally {
+        scanBtn.disabled = false;
+    scanBtn.textContent = "Scan Receipt";
+}
+}
+
+async function confirmToWave() {
+    const confirmBtn = document.getElementById("confirmBtn");
+  const status = document.getElementById("confirmStatus");
+
+  const vendor = document.getElementById("fVendor").value.trim();
+  const date = document.getElementById("fDate").value;
+  const subtotal = parseFloat(document.getElementById("fSubtotal").value) || 0;
+  const gst = parseFloat(document.getElementById("fGst").value) || 0;
+  const pst = parseFloat(document.getElementById("fPst").value) || 0;
+  const total = parseFloat(document.getElementById("fTotal").value) || 0;
+  const categoryAccountId = document.getElementById("fCategory").value;
+
+  if (!vendor || !date || !total || !categoryAccountId) {
+    status.className = "bad";
+    status.textContent = "Vendor, date, total, and category are all required before this can go to Wave.";
+    return;
+}
+
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = '<span class="spinner"></span>Sending to Wave…';
+  status.className = "";
+  status.textContent = "";
+
+  try {
+    const result = await apiCall({
+      action: "createWaveExpense",
+      vendor: vendor,
+      date: date,
+      subtotal: subtotal,
+      gst: gst,
+      pst: pst,
+      total: total,
+      categoryAccountId: categoryAccountId
+});
+
+    if (!result.ok) {
+      throw new Error(result.error || "Unknown error creating Wave transaction");
+}
+
+    status.className = "ok";
+    status.textContent = "Recorded in Wave. Transaction ID: " + result.transactionId;
+    confirmBtn.textContent = "Sent ✓";
+} catch (err) {
+    status.className = "bad";
+    status.textContent = "Could not send to Wave: " + err.message;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Confirm & Send to Wave";
+}
+}
+
+function resetForm() {
+  document.getElementById("receiptFile").value = "";
+  document.getElementById("reviewCard").hidden = true;
+  document.getElementById("scanStatus").textContent = "";
+  document.getElementById("confirmStatus").textContent = "";
+  document.getElementById("confirmBtn").disabled = false;
+  document.getElementById("confirmBtn").textContent = "Confirm & Send to Wave";
+}
+</script>
+
+</body>
+</html>

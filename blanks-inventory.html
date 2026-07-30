@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blanks Inventory — My Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F2ED;
+  --surface: #FFFFFF;
+  --surface2: #EFECE6;
+  --surface3: #E8E4DC;
+  --border: #DDD9D0;
+  --border2: #CBC7BE;
+  --text: #1C1A17;
+  --text2: #6B6760;
+  --text3: #9E9B95;
+  --accent: #B85C2A;
+  --accent-bg: #F5EAE3;
+  --accent2: #2A6B8A;
+  --accent2-bg: #E3EEF5;
+  --green: #3A6B10;
+  --green-bg: #EAF3DE;
+  --red: #A12B2B;
+  --red-bg: #FCEBEB;
+  --amber: #835010;
+  --amber-bg: #FAEEDA;
+  --purple: #5B3FA0;
+  --purple-bg: #EEEDFE;
+  --teal: #0F6E56;
+  --teal-bg: #E1F5EE;
+  --r: 8px;
+  --rl: 14px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  --shadow2: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+header{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1rem;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.logo{font-family:'Playfair Display',serif;font-size:20px;letter-spacing:-0.2px;white-space:nowrap}
+.logo em{color:var(--accent);font-style:normal}
+.back-link{font-family:'Jost',sans-serif;font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;padding:6px 10px;border-radius:var(--r);transition:all .15s}
+.back-link:hover{background:var(--surface2);color:var(--text)}
+.pagename{font-size:13px;color:var(--text3);white-space:nowrap}
+.header-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+.sync-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);background:var(--surface2);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+main{flex:1;padding:1.5rem;max-width:1500px;margin:0 auto;width:100%}
+
+.tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:var(--r);margin-bottom:1.25rem;max-width:520px}
+.tab-btn{flex:1;padding:8px 8px;border:none;background:transparent;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;text-align:center;transition:all .15s}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.tab-btn:hover:not(.active){background:rgba(255,255,255,0.5)}
+
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:10px;flex-wrap:wrap}
+.sec-hd h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:400}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px}
+.stat-value{font-family:'Playfair Display',serif;font-size:28px;line-height:1}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.stat-value.amber{color:var(--amber)}
+.stat-value.accent{color:var(--accent)}
+
+.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+input,select,textarea{font-family:'Jost',sans-serif;font-size:13px;padding:8px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,92,42,0.12)}
+textarea{height:64px;resize:vertical}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap input{padding-left:32px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+
+button{font-family:'Jost',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+button:hover{background:var(--surface2)}
+button:active{transform:scale(0.98)}
+button:disabled{opacity:0.55;cursor:default}
+button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+button.primary:hover{background:#a04f24}
+button.danger{color:var(--red)}
+button.danger:hover{background:var(--red-bg);border-color:var(--red)}
+button.sm{padding:4px 10px;font-size:12px}
+button.ghost{border:none;background:transparent;color:var(--text2)}
+button.ghost:hover{background:var(--surface2);color:var(--text)}
+button.step{padding:2px 8px;font-size:14px;font-weight:600;line-height:1}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--shadow);overflow:hidden}
+.card-pad{padding:1.25rem 1.5rem}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;min-width:900px}
+th{background:var(--surface2);padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf8f5}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.stock-low{color:var(--red);font-weight:600}
+.qty-cell{display:flex;align-items:center;gap:6px;justify-content:flex-start}
+.qty-num{min-width:28px;text-align:center;font-weight:600}
+.inline-cost{width:90px;padding:4px 6px;font-size:12.5px}
+
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin:1px 2px 1px 0;white-space:nowrap}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,12,8,0.55);z-index:200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rl);width:min(640px,100%);border:1px solid var(--border);box-shadow:var(--shadow2);flex-shrink:0}
+.modal-hd{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-hd h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:400}
+.modal-bd{padding:1.25rem 1.5rem;max-height:65vh;overflow-y:auto}
+.modal-ft{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--surface2)}
+
+.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.sec-label:first-child{margin-top:0}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fg label,.fl label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--text2)}
+.fl{margin-bottom:10px}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:0.4}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text2);margin-bottom:6px}
+
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:3rem;color:var(--text3)}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:white;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red)}
+
+.scan-drop{border:1.5px dashed var(--border2);border-radius:var(--rl);padding:2rem 1.5rem;text-align:center;background:var(--surface2)}
+.scan-drop p{color:var(--text2);margin-bottom:14px;font-size:13px}
+.status-line{margin-top:14px;font-size:13px}
+.status-line.ok{color:var(--green)}
+.status-line.err{color:var(--red)}
+
+.review-row-off{opacity:0.4}
+.chk-cell{width:34px;text-align:center}
+.review-input{padding:5px 7px;font-size:12.5px;width:100%}
+.review-input.num{text-align:right}
+.match-select{padding:5px 7px;font-size:12px;min-width:220px}
+.skip-badge{font-size:11px;color:var(--amber);font-weight:600}
+
+@media(max-width:640px){
+  main{padding:1rem}
+  .fg{grid-template-columns:1fr}
+  .fg3{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">My <em>Shop</em></div>
+  <a class="back-link" href="index.html">‹ Menu</a>
+  <div class="pagename">Blanks Inventory</div>
+  <div class="header-right">
+    <div class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncTxt">Connected</span></div>
+  </div>
+</header>
+
+<main>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchView('inventory',this)">Inventory</button>
+    <button class="tab-btn" onclick="switchView('addstock',this)">+ Add Stock</button>
+    <button class="tab-btn" onclick="switchView('removestock',this)">− Remove Stock</button>
+  </div>
+
+  <!-- ============================================================
+       VIEW: INVENTORY (table + manual adjustment)
+  ============================================================= -->
+  <div id="view-inventory">
+
+    <div class="sec-hd">
+      <h2>Blank Apparel &amp; Promo Stock</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost" onclick="refreshInventory()">⟳ Refresh</button>
+        <button class="primary" onclick="openModal()">+ Add SKU</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar">
+      <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="search" placeholder="Search style, description, color, supplier…" oninput="renderInventory()"></div>
+    </div>
+
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:100px">Style #</th>
+            <th style="width:170px">Description</th>
+            <th style="width:100px">Color</th>
+            <th style="width:80px">Size</th>
+            <th style="width:130px">Qty In Stock</th>
+            <th style="width:110px">Unit Cost</th>
+            <th style="width:100px">Stock Value</th>
+            <th style="width:120px">Supplier</th>
+            <th style="width:140px">Notes</th>
+            <th style="width:90px">Actions</th>
+          </tr></thead>
+          <tbody id="tbody">
+            <tr><td colspan="10"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       VIEW: ADD STOCK (purchase receipt scan)
+  ============================================================= -->
+  <div id="view-addstock" hidden>
+    <div class="sec-hd"><h2>Add Stock from a Purchase Receipt</h2></div>
+
+    <div class="card card-pad scan-drop">
+      <p>Take a photo, choose from your gallery, or upload a PDF of a supplier receipt or PO (SanMar, S&amp;S, or any supplier). Gemini reads the line items — you'll check everything before it touches stock.</p>
+      <input type="file" id="addStockFile" accept="image/*,.pdf,application/pdf" style="max-width:340px;margin:0 auto 14px;display:block">
+      <button class="primary" id="addScanBtn" onclick="scanAddStock()">Scan Receipt</button>
+      <div id="addScanStatus" class="status-line"></div>
+    </div>
+
+    <div class="card" id="addReviewCard" style="margin-top:1.25rem" hidden>
+      <div class="card-pad" style="padding-bottom:0">
+        <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:400;margin-bottom:4px">Review before adding to stock</h2>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Uncheck anything that shouldn't go into inventory. Existing style/color/size combos add to the current count — new ones create a new row.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th class="chk-cell">✓</th>
+            <th style="width:100px">Style #</th>
+            <th style="width:180px">Description</th>
+            <th style="width:100px">Color</th>
+            <th style="width:80px">Size</th>
+            <th style="width:70px">Qty</th>
+            <th style="width:100px">Unit Cost</th>
+          </tr></thead>
+          <tbody id="addItemsBody"></tbody>
+        </table>
+      </div>
+      <div class="card-pad" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="primary" id="addConfirmBtn" onclick="confirmAddStock()">Add to Stock</button>
+        <button class="ghost" onclick="resetAddStock()">Start Over</button>
+        <div id="addConfirmStatus" class="status-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       VIEW: REMOVE STOCK (sales invoice scan)
+  ============================================================= -->
+  <div id="view-removestock" hidden>
+    <div class="sec-hd"><h2>Remove Stock from a Sales Invoice</h2></div>
+
+    <div class="card card-pad scan-drop">
+      <p>Photo, gallery, or PDF of a sales invoice or fulfilled order. Sales invoices are often less detailed than receipts, so confirm the match on every line before anything is subtracted.</p>
+      <input type="file" id="removeStockFile" accept="image/*,.pdf,application/pdf" style="max-width:340px;margin:0 auto 14px;display:block">
+      <button class="primary" id="removeScanBtn" onclick="scanRemoveStock()">Scan Invoice</button>
+      <div id="removeScanStatus" class="status-line"></div>
+    </div>
+
+    <div class="card" id="removeReviewCard" style="margin-top:1.25rem" hidden>
+      <div class="card-pad" style="padding-bottom:0">
+        <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:400;margin-bottom:4px">Confirm what's leaving stock</h2>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Pick the matching inventory row for each line. Anything left as "No match" is skipped.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:280px">Scanned line</th>
+            <th style="width:70px">Qty</th>
+            <th style="width:260px">Match to inventory row</th>
+          </tr></thead>
+          <tbody id="removeItemsBody"></tbody>
+        </table>
+      </div>
+      <div class="card-pad" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="primary" id="removeConfirmBtn" onclick="confirmRemoveStock()">Remove from Stock</button>
+        <button class="ghost" onclick="resetRemoveStock()">Start Over</button>
+        <div id="removeConfirmStatus" class="status-line"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ADD/EDIT SKU MODAL (manual entry, Inventory tab) -->
+<div class="overlay" id="item-modal">
+  <div class="modal">
+    <div class="modal-hd"><h2 id="modal-title">Add SKU</h2><button class="ghost sm" onclick="closeModal()">✕</button></div>
+    <div class="modal-bd">
+      <div class="sec-label">Identity</div>
+      <div class="fg">
+        <label>Style #<input type="text" id="f-style" placeholder="e.g. G500"></label>
+        <label>Description<input type="text" id="f-desc" placeholder="e.g. Gildan Heavy Cotton Tee"></label>
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <label>Color<input type="text" id="f-color" placeholder="e.g. Black"></label>
+        <label>Size<input type="text" id="f-size" placeholder="e.g. L or One Size"></label>
+      </div>
+
+      <div class="sec-label">Stock &amp; cost</div>
+      <div class="fg">
+        <label>Qty In Stock<input type="number" id="f-qty" value="0"></label>
+        <label>Unit Cost<input type="number" step="0.01" id="f-cost" value="0"></label>
+      </div>
+
+      <div class="sec-label">Sourcing</div>
+      <div class="fl"><label>Supplier<input type="text" id="f-supplier" placeholder="e.g. S&amp;S Activewear"></label></div>
+      <div class="fl"><label>Notes<textarea id="f-notes" placeholder="e.g. PST exempt"></textarea></label></div>
+    </div>
+    <div class="modal-ft">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="primary" id="save-btn" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================
+   BACKEND CONNECTION — same Apps Script backend as the rest of
+   the app. No sheet/tab name is sent for this spreadsheet;
+   the backend opens it by ID and uses its first tab. Columns
+   are always read/written by HEADER NAME, never by position.
+   =========================================================== */
+const API = 'https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec';
+const SHEET_ID = '1av5SNHzoH-9iCa1mPSS2mjZtmCmPMM2tiTp069jDJm8';
+
+async function apiCall(params){
+  setSyncState('syncing');
+  try{
+    const r = await fetch(API, { method:'POST', body: JSON.stringify(params) });
+    const d = await r.json();
+    setSyncState('ok');
+    return d;
+  }catch(e){ setSyncState('error'); throw e; }
+}
+
+function setSyncState(s){
+  const d=document.getElementById('syncDot'), t=document.getElementById('syncTxt');
+  d.className = 'sync-dot' + (s==='syncing' ? ' syncing' : s==='error' ? ' error' : '');
+  t.textContent = s==='syncing' ? 'Syncing…' : s==='error' ? 'Error' : 'Connected';
+}
+
+function toast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type==='ok' ? 'ok' : type==='err' ? 'err' : '');
+  setTimeout(()=>{ t.className = 'toast'; }, 3500);
+}
+
+function fmtMoney(v){ return '$' + Number(v||0).toFixed(2); }
+
+/* ===========================================================
+   MATCH KEY — style + color + size, trimmed, lowercase, joined.
+   This is stored as its own column and used as saveRow's keyCol
+   so the generic backend can upsert without new server code.
+   =========================================================== */
+function matchKey(style, color, size){
+  return [style, color, size].map(v => (v==null?'':String(v)).trim().toLowerCase()).join('|');
+}
+
+let inventoryData = [];
+
+async function loadInventory(){
+  try{
+    const res = await apiCall({ action:'getSheet', spreadsheetId: SHEET_ID });
+    inventoryData = res.rows || res.data || (Array.isArray(res) ? res : []);
+    renderInventory();
+  }catch(e){
+    document.getElementById('tbody').innerHTML = `<tr><td colspan="10"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load inventory</div><div>Check the connection and try Refresh</div></div></td></tr>`;
+  }
+}
+
+async function refreshInventory(){
+  try{ await loadInventory(); toast('Inventory refreshed','ok'); }
+  catch(e){ toast('Error refreshing','err'); }
+}
+
+function switchView(view, btn){
+  ['inventory','addstock','removestock'].forEach(v=>{
+    document.getElementById('view-'+v).hidden = (v!==view);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ===========================================================
+   INVENTORY VIEW — table, qty stepper, inline cost edit
+   =========================================================== */
+function renderInventory(){
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  let filtered = inventoryData.filter(r=>{
+    if(!q) return true;
+    const hay = [r['Style #'],r['Description'],r['Color'],r['Size'],r['Supplier'],r['Notes']].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  const totalSkus = inventoryData.length;
+  const totalUnits = inventoryData.reduce((s,r)=>s+(Number(r['Qty In Stock'])||0),0);
+  const totalValue = inventoryData.reduce((s,r)=>s+(Number(r['Qty In Stock'])||0)*(Number(r['Unit Cost'])||0),0);
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Total SKUs</div><div class="stat-value">${totalSkus}</div></div>
+    <div class="stat"><div class="stat-label">Total Units</div><div class="stat-value">${totalUnits}</div></div>
+    <div class="stat"><div class="stat-label">Stock Value</div><div class="stat-value accent">${fmtMoney(totalValue)}</div></div>
+  `;
+
+  const tb = document.getElementById('tbody');
+  if(!filtered.length){
+    tb.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="empty-icon">👕</div><div class="empty-title">${inventoryData.length?'No matches':'No blanks yet'}</div><div>${inventoryData.length?'Try a different search':'Scan a receipt or click "+ Add SKU" to get started'}</div></div></td></tr>`;
+    return;
+  }
+
+  tb.innerHTML = filtered.map(r=>{
+    const mk = r['Match Key'] || matchKey(r['Style #'], r['Color'], r['Size']);
+    const qty = Number(r['Qty In Stock'])||0;
+    const cost = Number(r['Unit Cost'])||0;
+    const value = qty*cost;
+    return `<tr>
+      <td class="mono">${esc(r['Style #'])||''}</td>
+      <td style="font-weight:500">${esc(r['Description'])||''}</td>
+      <td>${esc(r['Color'])||'—'}</td>
+      <td>${esc(r['Size'])||'—'}</td>
+      <td>
+        <div class="qty-cell">
+          <button class="step ghost" onclick="stepQty('${escAttr(mk)}',-1)">−</button>
+          <span class="qty-num">${qty}</span>
+          <button class="step ghost" onclick="stepQty('${escAttr(mk)}',1)">+</button>
+        </div>
+      </td>
+      <td><input class="inline-cost" type="number" step="0.01" value="${cost}" onchange="updateCost('${escAttr(mk)}',this.value)"></td>
+      <td>${fmtMoney(value)}</td>
+      <td style="font-size:11px;color:var(--text3)">${esc(r['Supplier'])||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${esc(r['Notes'])||'—'}</td>
+      <td>
+        <button class="sm ghost" onclick="editItem('${escAttr(mk)}')">Edit</button>
+        <button class="sm ghost danger" onclick="deleteItem('${escAttr(mk)}')">Del</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function esc(v){ return v==null ? '' : String(v).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(v){ return v==null ? '' : String(v).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function findByMatchKey(mk){
+  return inventoryData.find(r => (r['Match Key']||matchKey(r['Style #'],r['Color'],r['Size'])) === mk);
+}
+
+async function stepQty(mk, delta){
+  const row = findByMatchKey(mk);
+  if(!row) return;
+  const newQty = Math.max(0, (Number(row['Qty In Stock'])||0) + delta);
+  row['Qty In Stock'] = newQty;
+  row['Match Key'] = row['Match Key'] || mk;
+  renderInventory();
+  try{
+    await apiCall({ action:'saveRow', spreadsheetId: SHEET_ID, keyCol:'Match Key', row });
+  }catch(e){ toast('Could not save quantity change','err'); }
+}
+
+async function updateCost(mk, value){
+  const row = findByMatchKey(mk);
+  if(!row) return;
+  row['Unit Cost'] = Number(value)||0;
+  row['Match Key'] = row['Match Key'] || mk;
+  renderInventory();
+  try{
+    await apiCall({ action:'saveRow', spreadsheetId: SHEET_ID, keyCol:'Match Key', row });
+    toast('Unit cost updated','ok');
+  }catch(e){ toast('Could not save cost change','err'); }
+}
+
+async function deleteItem(mk){
+  const row = findByMatchKey(mk);
+  if(!row) return;
+  if(!confirm(`Delete "${row['Style #']||''} — ${row['Description']||''}" from inventory? This removes the row from the live sheet.`)) return;
+  try{
+    await apiCall({ action:'deleteRow', spreadsheetId: SHEET_ID, key:'Match Key', value: mk });
+    inventoryData = inventoryData.filter(r => (r['Match Key']||matchKey(r['Style #'],r['Color'],r['Size'])) !== mk);
+    renderInventory();
+    toast('SKU deleted','ok');
+  }catch(e){ toast('Error deleting','err'); }
+}
+
+/* ===========================================================
+   ADD/EDIT SKU MODAL (manual)
+   =========================================================== */
+let editMatchKey = null;
+
+function openModal(mk=null){
+  editMatchKey = mk;
+  if(!mk){
+    document.getElementById('modal-title').textContent = 'Add SKU';
+    ['f-style','f-desc','f-color','f-size','f-supplier','f-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-qty').value = 0;
+    document.getElementById('f-cost').value = 0;
+  }else{
+    const row = findByMatchKey(mk);
+    document.getElementById('modal-title').textContent = 'Edit SKU';
+    document.getElementById('f-style').value = row['Style #']||'';
+    document.getElementById('f-desc').value = row['Description']||'';
+    document.getElementById('f-color').value = row['Color']||'';
+    document.getElementById('f-size').value = row['Size']||'';
+    document.getElementById('f-qty').value = row['Qty In Stock']||0;
+    document.getElementById('f-cost').value = row['Unit Cost']||0;
+    document.getElementById('f-supplier').value = row['Supplier']||'';
+    document.getElementById('f-notes').value = row['Notes']||'';
+  }
+  document.getElementById('item-modal').classList.add('open');
+}
+
+function editItem(mk){ openModal(mk); }
+function closeModal(){ document.getElementById('item-modal').classList.remove('open'); }
+
+async function saveItem(){
+  const style = document.getElementById('f-style').value.trim();
+  const color = document.getElementById('f-color').value.trim();
+  const size = document.getElementById('f-size').value.trim();
+  if(!style){ alert('Please enter a Style #'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const mk = matchKey(style, color, size);
+  const row = {
+    'Style #': style,
+    'Description': document.getElementById('f-desc').value.trim(),
+    'Color': color,
+    'Size': size,
+    'Qty In Stock': +document.getElementById('f-qty').value || 0,
+    'Unit Cost': +document.getElementById('f-cost').value || 0,
+    'Supplier': document.getElementById('f-supplier').value.trim(),
+    'Notes': document.getElementById('f-notes').value.trim(),
+    'Match Key': mk
+  };
+
+  try{
+    await apiCall({ action:'saveRow', spreadsheetId: SHEET_ID, keyCol:'Match Key', row });
+    const idx = inventoryData.findIndex(r => (r['Match Key']||matchKey(r['Style #'],r['Color'],r['Size'])) === mk);
+    if(idx>-1) inventoryData[idx] = row; else inventoryData.push(row);
+    renderInventory();
+    closeModal();
+    toast(editMatchKey ? 'SKU updated' : 'SKU added','ok');
+  }catch(e){
+    toast('Error saving — check connection','err');
+  }finally{
+    btn.textContent = 'Save'; btn.disabled = false;
+  }
+}
+
+/* ===========================================================
+   IMAGE / PDF HANDLING — resize images client-side before
+   sending (max width 1600px, JPEG quality 0.85). PDFs are
+   sent as-is; Gemini reads inline_data the same way regardless
+   of block type.
+   =========================================================== */
+function fileToPayload(file, maxWidth=1600, quality=0.85){
+  return new Promise((resolve, reject) => {
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name||'');
+    const reader = new FileReader();
+    if(isPdf){
+      reader.onload = () => resolve({ base64: reader.result.split(',')[1], mimeType: 'application/pdf' });
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxWidth){
+          height = Math.round(height * (maxWidth/width));
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ===========================================================
+   ADD STOCK — purchase receipt scan
+   =========================================================== */
+let addScanItems = [];
+
+async function scanAddStock(){
+  const fileInput = document.getElementById('addStockFile');
+  const status = document.getElementById('addScanStatus');
+  const btn = document.getElementById('addScanBtn');
+  const file = fileInput.files[0];
+
+  if(!file){ status.className='status-line err'; status.textContent='Choose or take a photo (or PDF) first.'; return; }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Reading receipt…';
+  status.className = 'status-line'; status.textContent = '';
+
+  try{
+    const payload = await fileToPayload(file);
+    const result = await apiCall({ action:'scanBlanks', imageData: payload.base64, mimeType: payload.mimeType });
+    if(!result.ok) throw new Error(result.error || 'Unknown error reading receipt');
+
+    const items = Array.isArray(result.data.items) ? result.data.items : [];
+    if(!items.length){
+      status.className = 'status-line err';
+      status.textContent = "Couldn't find any line items on that page. Try a clearer photo, or add stock manually from the Inventory tab.";
+      return;
+    }
+
+    addScanItems = items.map(it => ({
+      include: true,
+      style: it.style || '',
+      description: it.description || '',
+      color: it.color || '',
+      size: it.size || '',
+      qty: Number(it.qty)||0,
+      unitCost: Number(it.unitCost)||0
+    }));
+    renderAddItems();
+    document.getElementById('addReviewCard').hidden = false;
+    status.className = 'status-line ok';
+    status.textContent = `Read ${items.length} line item${items.length===1?'':'s'}. Check everything below before adding to stock.`;
+  }catch(e){
+    status.className = 'status-line err';
+    status.textContent = 'Could not read receipt: ' + e.message;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Scan Receipt';
+  }
+}
+
+function renderAddItems(){
+  const body = document.getElementById('addItemsBody');
+  body.innerHTML = addScanItems.map((it, idx) => `
+    <tr class="${it.include?'':'review-row-off'}">
+      <td class="chk-cell"><input type="checkbox" ${it.include?'checked':''} onchange="addScanItems[${idx}].include=this.checked;renderAddItems()"></td>
+      <td><input class="review-input" type="text" value="${escAttr(it.style)}" onchange="addScanItems[${idx}].style=this.value"></td>
+      <td><input class="review-input" type="text" value="${escAttr(it.description)}" onchange="addScanItems[${idx}].description=this.value"></td>
+      <td><input class="review-input" type="text" value="${escAttr(it.color)}" onchange="addScanItems[${idx}].color=this.value"></td>
+      <td><input class="review-input" type="text" value="${escAttr(it.size)}" onchange="addScanItems[${idx}].size=this.value"></td>
+      <td><input class="review-input num" type="number" value="${it.qty}" onchange="addScanItems[${idx}].qty=+this.value||0"></td>
+      <td><input class="review-input num" type="number" step="0.01" value="${it.unitCost}" onchange="addScanItems[${idx}].unitCost=+this.value||0"></td>
+    </tr>
+  `).join('');
+}
+
+async function confirmAddStock(){
+  const btn = document.getElementById('addConfirmBtn');
+  const status = document.getElementById('addConfirmStatus');
+  const included = addScanItems.filter(it => it.include);
+
+  if(!included.length){ status.className='status-line err'; status.textContent='Nothing is checked — nothing to add.'; return; }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Adding to stock…';
+  status.className = 'status-line'; status.textContent = '';
+
+  let unitsAdded = 0, newSkus = 0, updatedSkus = 0, errors = 0;
+
+  for(const it of included){
+    const mk = matchKey(it.style, it.color, it.size);
+    try{
+      let row = findByMatchKey(mk);
+      if(row){
+        row['Qty In Stock'] = (Number(row['Qty In Stock'])||0) + it.qty;
+        if(it.unitCost > 0) row['Unit Cost'] = it.unitCost;
+        row['Match Key'] = mk;
+        updatedSkus++;
+      }else{
+        row = {
+          'Style #': it.style,
+          'Description': it.description,
+          'Color': it.color,
+          'Size': it.size,
+          'Qty In Stock': it.qty,
+          'Unit Cost': it.unitCost,
+          'Supplier': '',
+          'Notes': '',
+          'Match Key': mk
+        };
+        inventoryData.push(row);
+        newSkus++;
+      }
+      await apiCall({ action:'saveRow', spreadsheetId: SHEET_ID, keyCol:'Match Key', row });
+      unitsAdded += it.qty;
+    }catch(e){ errors++; }
+  }
+
+  renderInventory();
+  btn.disabled = false; btn.textContent = 'Add to Stock';
+
+  if(errors){
+    status.className = 'status-line err';
+    status.textContent = `Added ${unitsAdded} units, but ${errors} line${errors===1?'':'s'} failed to save — check connection and try again.`;
+  }else{
+    status.className = 'status-line ok';
+    status.textContent = `+${unitsAdded} units added (${newSkus} new SKU${newSkus===1?'':'s'}, ${updatedSkus} existing updated).`;
+    toast(`+${unitsAdded} added`,'ok');
+  }
+}
+
+function resetAddStock(){
+  document.getElementById('addStockFile').value = '';
+  document.getElementById('addReviewCard').hidden = true;
+  document.getElementById('addScanStatus').textContent = '';
+  document.getElementById('addConfirmStatus').textContent = '';
+  addScanItems = [];
+}
+
+/* ===========================================================
+   REMOVE STOCK — sales invoice scan
+   =========================================================== */
+let removeScanItems = [];
+
+async function scanRemoveStock(){
+  const fileInput = document.getElementById('removeStockFile');
+  const status = document.getElementById('removeScanStatus');
+  const btn = document.getElementById('removeScanBtn');
+  const file = fileInput.files[0];
+
+  if(!file){ status.className='status-line err'; status.textContent='Choose or take a photo (or PDF) first.'; return; }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Reading invoice…';
+  status.className = 'status-line'; status.textContent = '';
+
+  try{
+    const payload = await fileToPayload(file);
+    const result = await apiCall({ action:'scanBlanks', imageData: payload.base64, mimeType: payload.mimeType });
+    if(!result.ok) throw new Error(result.error || 'Unknown error reading invoice');
+
+    const items = Array.isArray(result.data.items) ? result.data.items : [];
+    if(!items.length){
+      status.className = 'status-line err';
+      status.textContent = "Couldn't find any line items on that page. Try a clearer photo.";
+      return;
+    }
+
+    removeScanItems = items.map(it => {
+      const mk = matchKey(it.style, it.color, it.size);
+      let matchMk = '';
+      if(findByMatchKey(mk)){
+        matchMk = mk;
+      }else{
+        const styleNorm = (it.style||'').trim().toLowerCase();
+        if(styleNorm){
+          const styleMatches = inventoryData.filter(r => (r['Style #']||'').trim().toLowerCase() === styleNorm);
+          if(styleMatches.length === 1){
+            matchMk = styleMatches[0]['Match Key'] || matchKey(styleMatches[0]['Style #'], styleMatches[0]['Color'], styleMatches[0]['Size']);
+          }
+        }
+      }
+      return {
+        style: it.style || '', description: it.description || '', color: it.color || '', size: it.size || '',
+        qty: Number(it.qty)||0, matchMk
+      };
+    });
+    renderRemoveItems();
+    document.getElementById('removeReviewCard').hidden = false;
+    status.className = 'status-line ok';
+    status.textContent = `Read ${items.length} line item${items.length===1?'':'s'}. Confirm the match for each before removing from stock.`;
+  }catch(e){
+    status.className = 'status-line err';
+    status.textContent = 'Could not read invoice: ' + e.message;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Scan Invoice';
+  }
+}
+
+function inventoryOptionsHtml(selectedMk){
+  const opts = ['<option value="">— No match —</option>'];
+  inventoryData.forEach(r=>{
+    const mk = r['Match Key'] || matchKey(r['Style #'],r['Color'],r['Size']);
+    const label = `${r['Style #']||'—'} — ${r['Description']||''} (${r['Color']||'—'}/${r['Size']||'—'}) — Qty ${r['Qty In Stock']||0}`;
+    opts.push(`<option value="${escAttr(mk)}" ${mk===selectedMk?'selected':''}>${esc(label)}</option>`);
+  });
+  return opts.join('');
+}
+
+function renderRemoveItems(){
+  const body = document.getElementById('removeItemsBody');
+  body.innerHTML = removeScanItems.map((it, idx) => `
+    <tr>
+      <td>
+        <div style="font-weight:500">${esc(it.style)||'(no style #)'} — ${esc(it.description)}</div>
+        <div style="font-size:11px;color:var(--text3)">${esc(it.color)||'—'} / ${esc(it.size)||'—'}</div>
+      </td>
+      <td><input class="review-input num" type="number" value="${it.qty}" onchange="removeScanItems[${idx}].qty=+this.value||0"></td>
+      <td><select class="match-select" onchange="removeScanItems[${idx}].matchMk=this.value">${inventoryOptionsHtml(it.matchMk)}</select></td>
+    </tr>
+  `).join('');
+}
+
+async function confirmRemoveStock(){
+  const btn = document.getElementById('removeConfirmBtn');
+  const status = document.getElementById('removeConfirmStatus');
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Removing from stock…';
+  status.className = 'status-line'; status.textContent = '';
+
+  let unitsRemoved = 0, skipped = 0, errors = 0;
+
+  for(const it of removeScanItems){
+    if(!it.matchMk){ skipped++; continue; }
+    const row = findByMatchKey(it.matchMk);
+    if(!row){ skipped++; continue; }
+    try{
+      const newQty = Math.max(0, (Number(row['Qty In Stock'])||0) - it.qty);
+      row['Qty In Stock'] = newQty;
+      row['Match Key'] = row['Match Key'] || it.matchMk;
+      await apiCall({ action:'saveRow', spreadsheetId: SHEET_ID, keyCol:'Match Key', row });
+      unitsRemoved += it.qty;
+    }catch(e){ errors++; }
+  }
+
+  renderInventory();
+  btn.disabled = false; btn.textContent = 'Remove from Stock';
+
+  const parts = [];
+  if(unitsRemoved) parts.push(`−${unitsRemoved} units removed`);
+  if(skipped) parts.push(`${skipped} line${skipped===1?'':'s'} skipped — no match selected`);
+  if(errors) parts.push(`${errors} line${errors===1?'':'s'} failed to save`);
+
+  status.className = 'status-line ' + (errors ? 'err' : 'ok');
+  status.textContent = parts.join(', ') || 'Nothing removed.';
+  if(unitsRemoved && !errors) toast(`−${unitsRemoved} removed`,'ok');
+}
+
+function resetRemoveStock(){
+  document.getElementById('removeStockFile').value = '';
+  document.getElementById('removeReviewCard').hidden = true;
+  document.getElementById('removeScanStatus').textContent = '';
+  document.getElementById('removeConfirmStatus').textContent = '';
+  removeScanItems = [];
+}
+
+loadInventory();
+</script>
+</body>
+</html>

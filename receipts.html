@@ -1,35 +1,35 @@
 <!DOCTYPE html>
-  <html lang="en">
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>C. Ashley Design — Receipts & Expenses</title>
+<title>C. Ashley Design — Receipts & Expenses</title>
 
-  <!-- ============================================================
-  ZONE 1 — SHELL STYLES ★ COPIED FROM template.html, UNCHANGED ★
+<!-- ============================================================
+ZONE 1 — SHELL STYLES ★ COPIED FROM template.html, UNCHANGED ★
 ============================================================ -->
-  <style>
-  :root {
-  --brand: #6b5b95;
+<style>
+:root {
+--brand: #6b5b95;
 --brand-dark: #4f4370;
 --ink: #2c2c2a;
 --muted: #6b6b66;
 --line: #e3e0d8;
-  --bg: #faf9f6;
-  --ok: #1d7a4f;
+--bg: #faf9f6;
+--ok: #1d7a4f;
 --bad: #b3261e;
-  }
+}
 * { box-sizing: border-box; }
 body {
-  margin: 0;
+margin: 0;
 font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 color: var(--ink);
 background: var(--bg);
 line-height: 1.5;
 }
 header {
-  background: var(--brand);
+background: var(--brand);
 color: #fff;
 padding: 16px 24px;
 display: flex;
@@ -45,8 +45,8 @@ header a { color: #fff; text-decoration: none; opacity: 0.9; }
 header a:hover { opacity: 1; text-decoration: underline; }
 main { max-width: 900px; margin: 24px auto; padding: 0 24px; }
 .card {
-  background: #fff;
-  border: 1px solid var(--line);
+background: #fff;
+border: 1px solid var(--line);
 border-radius: 10px;
 padding: 20px;
 margin-bottom: 20px;
@@ -55,7 +55,7 @@ h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
 .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
 label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 input[type="text"], input[type="date"], input[type="number"], select {
-  padding: 8px 10px;
+padding: 8px 10px;
 border: 1px solid var(--line);
 border-radius: 6px;
 font-size: 14px;
@@ -63,7 +63,7 @@ min-width: 220px;
 width: 100%;
 }
 button {
-  background: var(--brand);
+background: var(--brand);
 color: #fff;
 border: none;
 border-radius: 6px;
@@ -80,129 +80,246 @@ button.secondary:hover { background: #f4f2ec; }
 #status.ok { color: var(--ok); }
 #status.bad { color: var(--bad); }
 pre {
-  background: #f4f2ec;
-  border: 1px solid var(--line);
+background: #f4f2ec;
+border: 1px solid var(--line);
 border-radius: 6px;
 padding: 12px;
 font-size: 12px;
 overflow-x: auto;
 white-space: pre-wrap;
 word-break: break-word;
-                       }
+}
 .field { margin-bottom: 14px; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+table.items { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+table.items th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 500; padding: 0 6px 6px; border-bottom: 1px solid var(--line); }
+table.items td { padding: 4px 6px; vertical-align: middle; }
+table.items td input[type="text"], table.items td input[type="number"] { min-width: 0; width: 100%; padding: 6px 8px; font-size: 13px; }
+table.items td.priceCell input { text-align: right; }
+table.items td.checkCell { text-align: center; width: 40px; }
+table.items td.delCell { width: 32px; text-align: center; }
+.itemDeleteBtn { background: none; border: none; color: var(--bad); font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+.itemDeleteBtn:hover { background: #f9e5e3; border-radius: 4px; }
+.addItemBtn { background: #fff; color: var(--brand); border: 1px dashed var(--brand); font-size: 13px; padding: 6px 12px; }
+.addItemBtn:hover { background: #f4f2ec; }
+.totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
 </style>
-  </head>
+</head>
+<body>
 
-  <body>
-
-  <!-- ============================================================
-       ZONE 2 — HEADER  ★ COPIED FROM template.html, UNCHANGED ★
+<!-- ============================================================
+ZONE 2 — HEADER ★ COPIED FROM template.html, UNCHANGED ★
 ============================================================ -->
-  <header>
-    <div>
-      <div class="brand">C. Ashley Design</div>
-      <div class="tagline">Design · Print · Signage · Apparel · Embroidery · Promo</div>
-    </div>
-    <div class="pagename"><a href="index.html">‹ Menu</a> &nbsp; Receipts &amp; Expenses</div>
-  </header>
+<header>
+<div>
+<div class="brand">C. Ashley Design</div>
+<div class="tagline">Design · Print · Signage · Apparel · Embroidery · Promo</div>
+</div>
+<div class="pagename"><a href="index.html">‹ Menu</a> &nbsp; Receipts &amp; Expenses</div>
+</header>
 
-  <main>
+<main>
 
-  <!-- ============================================================
-       ZONE 3 — PAGE CONTENT  ◆ RECEIPT SCANNER ◆
-  ============================================================ -->
-  <div class="card">
-    <h1>Scan a receipt</h1>
-  <p class="sub">Take a photo or upload an image. Gemini reads the receipt, then you check the numbers before anything goes into Wave.</p>
-
-    <div class="row">
-      <div>
-        <label for="receiptFile">Receipt photo</label>
-        <input type="file" id="receiptFile" accept="image/*" capture="environment">
-      </div>
-      <button id="scanBtn" onclick="scanReceipt()">Scan Receipt</button>
-    </div>
-
-    <div id="scanStatus"></div>
-  </div>
-
-  <div class="card" id="reviewCard" hidden>
-    <h1>Review before sending to Wave</h1>
-  <p class="sub">Fix anything that looks wrong — this is the last chance before it's recorded in your books.</p>
-
-    <div class="field-grid">
-      <div class="field">
-        <label for="fVendor">Vendor</label>
-        <input type="text" id="fVendor">
-      </div>
-      <div class="field">
-        <label for="fDate">Date</label>
-        <input type="date" id="fDate">
-      </div>
-      <div class="field">
-        <label for="fSubtotal">Subtotal (before tax)</label>
-        <input type="number" step="0.01" id="fSubtotal">
-      </div>
-      <div class="field">
-        <label for="fGst">GST</label>
-        <input type="number" step="0.01" id="fGst">
-      </div>
-      <div class="field">
-        <label for="fPst">PST</label>
-        <input type="number" step="0.01" id="fPst">
-      </div>
-      <div class="field">
-        <label for="fTotal">Total paid</label>
-        <input type="number" step="0.01" id="fTotal">
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="fCategory">Category</label>
-      <select id="fCategory"></select>
-      <div class="hint">Pulled live from your Wave expense categories.</div>
-  </div>
-
-  <div class="field">
-      <label for="fNotes">Notes from the scan (double-check these)</label>
-      <div id="fNotes" class="hint"></div>
-    </div>
-
-    <div class="row">
-      <button id="confirmBtn" onclick="confirmToWave()">Confirm &amp; Send to Wave</button>
-      <button class="secondary" onclick="resetForm()">Start Over</button>
-    </div>
-
-    <div id="confirmStatus"></div>
-  </div>
-  <!-- ◆ END REPLACE ZONE ◆ -->
-
-  </main>
-
-  <!-- ============================================================
-       ZONE 4 — BACKEND  ★ COPIED FROM template.html, UNCHANGED ★
+<!-- ============================================================
+ZONE 3 — PAGE CONTENT ◆ RECEIPT SCANNER ◆
 ============================================================ -->
-  <script>
-  const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec";
+<div class="card">
+<h1>Scan a receipt</h1>
+<p class="sub">Take a photo or upload an image. Gemini reads the receipt, then you check the numbers before anything goes into Wave.</p>
+
+<div class="row">
+<div>
+<label for="receiptFile">Receipt photo</label>
+<input type="file" id="receiptFile" accept="image/*" capture="environment">
+</div>
+<button id="scanBtn" onclick="scanReceipt()">Scan Receipt</button>
+</div>
+
+<div id="scanStatus"></div>
+</div>
+
+<div class="card" id="reviewCard" hidden>
+<h1>Review before sending to Wave</h1>
+<p class="sub">Fix anything that looks wrong — this is the last chance before it's recorded in your books.</p>
+
+<div class="field-grid">
+<div class="field">
+<label for="fVendor">Vendor</label>
+<input type="text" id="fVendor">
+</div>
+<div class="field">
+<label for="fDate">Date</label>
+<input type="date" id="fDate">
+</div>
+</div>
+
+<div class="field">
+<label>Items</label>
+<table class="items">
+<thead>
+<tr>
+<th>Description</th>
+<th style="width:90px;text-align:right">Price</th>
+<th class="checkCell">GST</th>
+<th class="checkCell">PST</th>
+<th class="delCell"></th>
+</tr>
+</thead>
+<tbody id="itemsBody"></tbody>
+</table>
+<button type="button" class="addItemBtn" onclick="addItemRow()">+ Add item</button>
+<div class="hint">Uncheck GST/PST for anything that's tax-exempt, delete anything that wasn't a business purchase, or add something the scan missed. Totals below update automatically — you can still type over them yourself.</div>
+</div>
+
+<div class="totals-grid">
+<div class="field">
+<label for="fSubtotal">Subtotal (before tax)</label>
+<input type="number" step="0.01" id="fSubtotal">
+</div>
+<div class="field">
+<label for="fGst">GST</label>
+<input type="number" step="0.01" id="fGst">
+</div>
+<div class="field">
+<label for="fPst">PST</label>
+<input type="number" step="0.01" id="fPst">
+</div>
+<div class="field">
+<label for="fTotal">Total paid</label>
+<input type="number" step="0.01" id="fTotal">
+</div>
+</div>
+
+<div class="field">
+<label for="fCategory">Category</label>
+<select id="fCategory"></select>
+<div class="hint">Pulled live from your Wave expense categories.</div>
+</div>
+
+<div class="field">
+<label for="fNotes">Notes from the scan (double-check these)</label>
+<div id="fNotes" class="hint"></div>
+</div>
+
+<div class="row">
+<button id="confirmBtn" onclick="confirmToWave()">Confirm &amp; Send to Wave</button>
+<button class="secondary" onclick="resetForm()">Start Over</button>
+</div>
+
+<div id="confirmStatus"></div>
+</div>
+<!-- ◆ END REPLACE ZONE ◆ -->
+
+</main>
+
+<!-- ============================================================
+ZONE 4 — BACKEND ★ COPIED FROM template.html, UNCHANGED ★
+============================================================ -->
+<script>
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxx8bkn-13BZMS_BH3JTZ-mW4_PiDG-CM8YDmzluB92tdiuZs6b3fSIlDvU_1Z2pVvR/exec";
 
 async function apiCall(payload) {
   const response = await fetch(BACKEND_URL, {
     method: "POST",
-          body: JSON.stringify(payload)
-      });
+    body: JSON.stringify(payload)
+  });
   return await response.json();
 }
 </script>
 
-  <!-- ============================================================
-       RECEIPTS MODULE LOGIC — specific to this page
+<!-- ============================================================
+RECEIPTS MODULE LOGIC — specific to this page
 ============================================================ -->
-  <script>
-  let categoriesLoaded = false;
+<script>
+let categoriesLoaded = false;
+let currentItems = [];
+const GST_RATE = 0.05;
+const PST_RATE = 0.07;
+
+function renderItems() {
+  const body = document.getElementById("itemsBody");
+  body.innerHTML = "";
+  currentItems.forEach((item, idx) => {
+    const tr = document.createElement("tr");
+
+    const descTd = document.createElement("td");
+    const descInput = document.createElement("input");
+    descInput.type = "text";
+    descInput.value = item.description || "";
+    descInput.oninput = () => { currentItems[idx].description = descInput.value; };
+    descTd.appendChild(descInput);
+    tr.appendChild(descTd);
+
+    const priceTd = document.createElement("td");
+    priceTd.className = "priceCell";
+    const priceInput = document.createElement("input");
+    priceInput.type = "number";
+    priceInput.step = "0.01";
+    priceInput.value = item.price != null ? item.price : "";
+    priceInput.oninput = () => { currentItems[idx].price = parseFloat(priceInput.value) || 0; recalcTotals(); };
+    priceTd.appendChild(priceInput);
+    tr.appendChild(priceTd);
+
+    const gstTd = document.createElement("td");
+    gstTd.className = "checkCell";
+    const gstCheck = document.createElement("input");
+    gstCheck.type = "checkbox";
+    gstCheck.checked = !!item.gst;
+    gstCheck.onchange = () => { currentItems[idx].gst = gstCheck.checked; recalcTotals(); };
+    gstTd.appendChild(gstCheck);
+    tr.appendChild(gstTd);
+
+    const pstTd = document.createElement("td");
+    pstTd.className = "checkCell";
+    const pstCheck = document.createElement("input");
+    pstCheck.type = "checkbox";
+    pstCheck.checked = !!item.pst;
+    pstCheck.onchange = () => { currentItems[idx].pst = pstCheck.checked; recalcTotals(); };
+    pstTd.appendChild(pstCheck);
+    tr.appendChild(pstTd);
+
+    const delTd = document.createElement("td");
+    delTd.className = "delCell";
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "itemDeleteBtn";
+    delBtn.textContent = "✕";
+    delBtn.title = "Remove this item";
+    delBtn.onclick = () => { currentItems.splice(idx, 1); renderItems(); recalcTotals(); };
+    delTd.appendChild(delBtn);
+    tr.appendChild(delTd);
+
+    body.appendChild(tr);
+  });
+}
+
+function addItemRow() {
+  currentItems.push({ description: "", price: 0, gst: true, pst: true });
+  renderItems();
+  recalcTotals();
+}
+
+function recalcTotals() {
+  let subtotal = 0, gst = 0, pst = 0;
+  currentItems.forEach(item => {
+    const price = Number(item.price) || 0;
+    subtotal += price;
+    if (item.gst) gst += price * GST_RATE;
+    if (item.pst) pst += price * PST_RATE;
+  });
+  subtotal = Math.round(subtotal * 100) / 100;
+  gst = Math.round(gst * 100) / 100;
+  pst = Math.round(pst * 100) / 100;
+  const total = Math.round((subtotal + gst + pst) * 100) / 100;
+
+  document.getElementById("fSubtotal").value = subtotal;
+  document.getElementById("fGst").value = gst;
+  document.getElementById("fPst").value = pst;
+  document.getElementById("fTotal").value = total;
+}
 
 async function loadCategories() {
   const select = document.getElementById("fCategory");
@@ -218,27 +335,28 @@ async function loadCategories() {
 
     select.innerHTML = "";
     expenseAccounts.forEach(acct => {
-            const opt = document.createElement("option");
-            opt.value = acct.id;
+      const opt = document.createElement("option");
+      opt.value = acct.id;
       opt.textContent = acct.name;
       select.appendChild(opt);
-  });
+    });
     categoriesLoaded = true;
-} catch (err) {
-      select.innerHTML = "<option value=''>Could not load categories</option>";
-         }
+  } catch (err) {
+    select.innerHTML = "<option value=''>Could not load categories</option>";
+  }
 }
 
 function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-                  const base64 = reader.result.split(",")[1];
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // reader.result looks like "data:image/jpeg;base64,AAAA..."
+      const base64 = reader.result.split(",")[1];
       resolve(base64);
-};
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
-});
+  });
 }
 
 async function scanReceipt() {
@@ -261,10 +379,10 @@ async function scanReceipt() {
   try {
     const base64 = await fileToBase64(file);
     const result = await apiCall({
-            action: "scanReceipt",
-            imageData: base64,
-            mimeType: file.type
-      });
+      action: "scanReceipt",
+      imageData: base64,
+      mimeType: file.type
+    });
 
     if (!result.ok) {
       throw new Error(result.error || "Unknown error reading receipt");
@@ -273,11 +391,32 @@ async function scanReceipt() {
     const data = result.data;
     document.getElementById("fVendor").value = data.vendor || "";
     document.getElementById("fDate").value = data.date || "";
-    document.getElementById("fSubtotal").value = data.subtotal != null ? data.subtotal : "";
-    document.getElementById("fGst").value = data.gst != null ? data.gst : "";
-    document.getElementById("fPst").value = data.pst != null ? data.pst : "";
-    document.getElementById("fTotal").value = data.total != null ? data.total : "";
     document.getElementById("fNotes").textContent = data.notes || "Nothing flagged — looks clean.";
+
+    if (Array.isArray(data.items) && data.items.length) {
+      currentItems = data.items.map(it => ({
+        description: it.description || "",
+        price: Number(it.price) || 0,
+        gst: it.gst !== false,
+        pst: it.pst !== false
+      }));
+      renderItems();
+      recalcTotals();
+    } else {
+      // Fallback: no itemization from the scan, drop the printed totals into a single row
+      currentItems = [{
+        description: data.vendor || "Purchase",
+        price: data.subtotal != null ? Number(data.subtotal) : 0,
+        gst: data.gst != null && Number(data.gst) > 0,
+        pst: data.pst != null && Number(data.pst) > 0
+      }];
+      renderItems();
+      // Use the scan's own totals here since we don't have real per-item prices to recompute from
+      document.getElementById("fSubtotal").value = data.subtotal != null ? data.subtotal : "";
+      document.getElementById("fGst").value = data.gst != null ? data.gst : "";
+      document.getElementById("fPst").value = data.pst != null ? data.pst : "";
+      document.getElementById("fTotal").value = data.total != null ? data.total : "";
+    }
 
     document.getElementById("reviewCard").hidden = false;
     if (!categoriesLoaded) await loadCategories();
@@ -288,13 +427,13 @@ async function scanReceipt() {
     status.className = "bad";
     status.textContent = "Could not read receipt: " + err.message;
   } finally {
-        scanBtn.disabled = false;
+    scanBtn.disabled = false;
     scanBtn.textContent = "Scan Receipt";
-}
+  }
 }
 
 async function confirmToWave() {
-    const confirmBtn = document.getElementById("confirmBtn");
+  const confirmBtn = document.getElementById("confirmBtn");
   const status = document.getElementById("confirmStatus");
 
   const vendor = document.getElementById("fVendor").value.trim();
@@ -309,7 +448,7 @@ async function confirmToWave() {
     status.className = "bad";
     status.textContent = "Vendor, date, total, and category are all required before this can go to Wave.";
     return;
-}
+  }
 
   confirmBtn.disabled = true;
   confirmBtn.innerHTML = '<span class="spinner"></span>Sending to Wave…';
@@ -326,21 +465,21 @@ async function confirmToWave() {
       pst: pst,
       total: total,
       categoryAccountId: categoryAccountId
-});
+    });
 
     if (!result.ok) {
       throw new Error(result.error || "Unknown error creating Wave transaction");
-}
+    }
 
     status.className = "ok";
     status.textContent = "Recorded in Wave. Transaction ID: " + result.transactionId;
     confirmBtn.textContent = "Sent ✓";
-} catch (err) {
+  } catch (err) {
     status.className = "bad";
     status.textContent = "Could not send to Wave: " + err.message;
     confirmBtn.disabled = false;
     confirmBtn.textContent = "Confirm & Send to Wave";
-}
+  }
 }
 
 function resetForm() {
@@ -350,6 +489,8 @@ function resetForm() {
   document.getElementById("confirmStatus").textContent = "";
   document.getElementById("confirmBtn").disabled = false;
   document.getElementById("confirmBtn").textContent = "Confirm & Send to Wave";
+  currentItems = [];
+  document.getElementById("itemsBody").innerHTML = "";
 }
 </script>
 
